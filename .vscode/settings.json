@@ -1,0 +1,45 @@
+{
+    // Use the IntelliSense engine that works best with PlatformIO
+  "C_Cpp.intelliSenseEngine": "default",
+
+  // Better understanding of headers included by PlatformIO
+  "C_Cpp.default.configurationProvider": "platformio",
+
+  // Treat warnings as errors (stronger checking in IntelliSense)
+  "C_Cpp.errorSquiggles": "enabled",
+
+  // Optional: Enable additional compiler warnings in IntelliSense
+  "C_Cpp.default.compilerArgs": [
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic"
+  ],
+
+  // Optional: Show all header files in the file explorer
+  "files.associations": {
+    "*.tcc": "cpp",
+    "cctype": "cpp",
+    "cmath": "cpp",
+    "cstddef": "cpp",
+    "cstdint": "cpp",
+    "cstdio": "cpp",
+    "cstdlib": "cpp",
+    "cstring": "cpp",
+    "ctime": "cpp",
+    "cwchar": "cpp",
+    "new": "cpp",
+    "type_traits": "cpp",
+    "utility": "cpp"
+  },
+
+  // Optional: format on save
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "ms-vscode.cpptools",
+
+  // Optional: show inlay hints for parameters
+  "C_Cpp.inlayHints.parameterNames.enabled": true,
+  "C_Cpp.inlayHints.referenceOperator.enabled": true,
+
+  // Optional: show squiggles for unused variables/functions
+  "C_Cpp.codeAnalysis.clangTidy.useBuildPath": true,
+}
