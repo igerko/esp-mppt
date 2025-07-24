@@ -12,6 +12,7 @@ namespace AdditionalJSONKeys
     constexpr auto SIGNAL_STRENGTH = "signal";
     constexpr auto REGISTERS = "registers";
     constexpr auto TOTAL_WAKE_TIME = "total_wake_time";
+    constexpr auto LOAD_STATUS = "load_status";
 }
 
 class LogEntry

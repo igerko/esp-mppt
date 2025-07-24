@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <LittleFS.h>
+#include <esp_task_wdt.h>
 
 #include "CommunicationSIM800L.h"
 #include "SolarMPPTMonitor.h"
@@ -24,6 +25,11 @@ LoadController loadController;
 
 void setup()
 {
+    esp_task_wdt_init(300, true); // 5 minutes seconds
+    esp_task_wdt_add(NULL);
+    setenv("TZ", "CET-1CEST,M3.5.0/2,M10.5.0/3", 1);
+    tzset();
+
     sleepManager.afterWakeUpSetup();
     Serial.begin(115200);
     delay(100);
@@ -35,35 +41,27 @@ void setup()
     //      - setting load
     //      - download config
 
-    if (!wakenFromDeepSleep){
+    // if (!wakenFromDeepSleep || !isTimeInitializedFromModem){
+    //     communicationService->setupModem();
+    // }
+    if (!communicationService->isModemOn())
         communicationService->setupModem();
-        // communicationService->mqttConnect();
-    }
+    esp_task_wdt_reset();
 
 }
 
 void loop()
 {
+    esp_task_wdt_reset();
     loadController.setLoadBasedOnConfig();
 
+
     const size_t loggedSize = LoggingService::logMPPTEntryToFile(SolarMPPTMonitor::readLogsFromMPPT());
-    Serial.printf("Logged %zu\n", loggedSize);
+    Serial.printf("Logged %zu bytes from MPPT\n", loggedSize);
 
-    File f = LittleFS.open(MPPT_LOG_FILE_NAME, "r");
-    while (f.available())
-    {
-        String line = f.readStringUntil('\n');
-        Serial.println(line); // or send via MQTT
-    }
-    f.close();
-
-    bool loadState;
-    SolarMPPTMonitor::readLoadState(loadState);
     communicationService->sendMPPTPayload();
-    // communicationService->mqttPublishLoadStatus(loadState);
-    // communicationService->mqttPublishMPPTLogs();
-
-    LoggingService::clearLogFile();
-
-    sleepManager.activateDeepSleep();
+    communicationService->sendLoadStatusPayload();
+    esp_task_wdt_reset();
+    delay(10000);
+    // sleepManager.activateDeepSleep();
 }

@@ -1,0 +1,44 @@
+services:
+  influxdb3-core:
+    image: influxdb:3-core
+    ports:
+      - 8181:8181
+    command:
+      - influxdb3
+      - serve
+      - --node-id=node0
+      - --object-store=file
+      - --data-dir=/var/lib/influxdb3/data
+      - --plugin-dir=/var/lib/influxdb3/plugins
+    volumes:
+      - type: bind
+        # Path to store data on your host system
+        source: influxdb3/data
+        # Path to store data in the container
+        target: /var/lib/influxdb3/data
+      - type: bind
+        # Path to store plugins on your host system
+        source: influxdb3/plugins
+        # Path to store plugins in the container
+        target: /var/lib/influxdb3/plugins
+
+  telegraf:
+    image: telegraf:1.35
+    ports:
+      - "8081:8081"   # http_listener_v2
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - influxdb3-core
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    ports:
+      - "3000:3000"
+    depends_on:
+      - influxdb3-core
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  grafana_data:

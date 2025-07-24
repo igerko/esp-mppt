@@ -18,12 +18,7 @@ void SolarMPPTMonitor::setupRS465()
     digitalWrite(RS485_DERE, LOW);
     RS485Serial.begin(RS485_BAUD, SERIAL_8N1, RS485_RXD, RS485_TXD);
     node.begin(1, RS485Serial);
-    node.preTransmission(preTransmission);
-    node.postTransmission(postTransmission);
 }
-
-void SolarMPPTMonitor::preTransmission() { digitalWrite(RS485_DERE, HIGH); }
-void SolarMPPTMonitor::postTransmission() { digitalWrite(RS485_DERE, LOW); }
 
 bool SolarMPPTMonitor::readRegister(const RegisterInfo& reg, float& outValue)
 {
@@ -166,7 +161,7 @@ void SolarMPPTMonitor::readAndPrintRegisters() // used for debug
 
 LogEntry SolarMPPTMonitor::readLogsFromMPPT()
 {
-    LogEntry logEntry(timeService.getTime());
+    LogEntry logEntry(timeService.getTimeUTC());
 
     for (auto& r : mpptReadRegisters)
     {
@@ -195,7 +190,7 @@ LogEntry SolarMPPTMonitor::readLogsFromMPPT()
             Serial.println(r.name);
         }
     }
-    Serial.println("Reading done");
+    Serial.println("Reading  from MPPT");
 
     return logEntry;
 }
@@ -214,7 +209,7 @@ bool SolarMPPTMonitor::setDatetimeInMPPT()
 
     Serial.println("Sending time to MPPT");
 
-    time_t datetime = TimeService::getTime();
+    time_t datetime = TimeService::getTimeInTZ();
     if (datetime == -1)
     {
         return false;

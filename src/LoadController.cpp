@@ -38,7 +38,7 @@ void LoadController::setLoadBasedOnConfig() const
         SolarMPPTMonitor::setLoad(false);
         return;
     }
-    time_t currentTime = timeService.getTime();
+    time_t currentTime = timeService.getTimeUTC();
     if (currentTime > nextLoadOn_ && currentTime < nextLoadOff_)
     {
         SolarMPPTMonitor::setLoad(true);

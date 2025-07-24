@@ -1,10 +1,17 @@
 #include "TimeService.h"
 #include "SolarMPPTMonitor.h"
 
-time_t TimeService::getTime()
+time_t TimeService::getTimeUTC()
 {
     if (!isTimeInitializedFromModem)
-        return -1;
+        return 0;
+    return time(nullptr);
+}
+
+time_t TimeService::getTimeInTZ()
+{
+    if (!isTimeInitializedFromModem)
+        return 0;
     tm t;
     time_t now2;
     time(&now2);
@@ -14,7 +21,9 @@ time_t TimeService::getTime()
 
 void TimeService::setESPTimeFromModem(const timeval& timeval)
 {
+    Serial.printf("UTC timestamp: %d\n", timeval.tv_sec);
     settimeofday(&timeval, nullptr);
+
     isTimeInitializedFromModem = true;
     bool result = SolarMPPTMonitor::setDatetimeInMPPT();
     if ( !result)
@@ -41,7 +50,7 @@ void TimeService::setTimeAfterWakeUp()
 
 void TimeService::debugTime()
 {
-    const time_t now = getTime();
+    const time_t now = getTimeUTC();
     tm t{};
     localtime_r(&now, &t);
     Serial.printf("%04d-%02d-%02d %02d:%02d:%02d\n",

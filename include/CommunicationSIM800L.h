@@ -23,14 +23,16 @@ public:
     int getSignalStrengthPercentage() override;
     void powerOffModemImpl() override;
     std::optional<timeval> getTimeFromModem() override;
+
     void sendMPPTPayload() override;
+    void sendLoadStatusPayload() override;
 
 protected:
     void setupModemImpl() override;
+    bool ensureNetwork();
 
 private:
     static bool setupPMU();
-
 
     TinyGsm modem;
     TinyGsmClient tinyGsmClient;

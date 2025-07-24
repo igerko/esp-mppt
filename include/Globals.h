@@ -32,16 +32,15 @@ extern LoadController loadController;
 #define GSM_PIN "0000"
 
 // HTTP TODO: make it HTTPS
-#define HTTP_SERVER "httpbin.org" // TODO Implement
-#define HTTP_PORT 80
-#define HTTP_RESOURCE_TEST_REQUEST "/post" // TODO Implement
-#define HTTP_RESOURCE_MPPT "/mptt"
+#define HTTP_SERVER "vps.igerko.com" // TODO Implement
+#define HTTP_PORT 8081
+#define HTTP_RESOURCE_MPPT "/crss"
 #define HTTP_RESOURCE_LOAD_STATUS "/load_status"
 #define HTTP_RESOURCE_READ_CONFIG "/read_config"
 
 // RS485 pins
-#define RS485_RXD 18
-#define RS485_TXD 19
+#define RS485_RXD 19
+#define RS485_TXD 18
 #define RS485_DERE 15
 #define RS485_BAUD 115200
 

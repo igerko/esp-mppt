@@ -6,7 +6,8 @@
 class TimeService
 {
 public:
-    static time_t getTime();
+    static time_t getTimeUTC();
+    static time_t getTimeInTZ();
     static void setESPTimeFromModem(const timeval& timeval);
     static void setTimeAfterWakeUp();
     static void debugTime();
