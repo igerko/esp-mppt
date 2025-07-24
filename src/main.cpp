@@ -25,7 +25,7 @@ LoadController loadController;
 
 void setup()
 {
-    esp_task_wdt_init(300, true); // 5 minutes seconds
+    esp_task_wdt_init(300, true); // 5 minutes
     esp_task_wdt_add(NULL);
     setenv("TZ", "CET-1CEST,M3.5.0/2,M10.5.0/3", 1);
     tzset();
@@ -62,6 +62,6 @@ void loop()
     communicationService->sendMPPTPayload();
     communicationService->sendLoadStatusPayload();
     esp_task_wdt_reset();
-    delay(10000);
+    delay(60000);
     // sleepManager.activateDeepSleep();
 }

@@ -20,12 +20,9 @@ void CommunicationSIM800L::setupModemImpl()
         Serial.println("Setting power error");
     }
 
-#ifdef MODEM_RST
     // Keep reset high
     pinMode(MODEM_RST, OUTPUT);
     digitalWrite(MODEM_RST, HIGH);
-#endif
-
     pinMode(MODEM_PWRKEY, OUTPUT);
     pinMode(MODEM_POWER_ON, OUTPUT);
 
@@ -103,19 +100,7 @@ bool CommunicationSIM800L::ensureNetwork()
             atOK = true;
             break; // modem responded
         }
-        Serial.printf("[NET] Modem not responding, attempt %d/3. Restarting...\n", attempts + 1);
-
-        digitalWrite(MODEM_POWER_ON, LOW);
-        delay(100);
-        digitalWrite(MODEM_POWER_ON, HIGH);
-
-        // Pull down PWRKEY for more than 1 second according to manual requirements
-        digitalWrite(MODEM_PWRKEY, HIGH);
-        delay(100);
-        digitalWrite(MODEM_PWRKEY, LOW);
-        delay(1000);
-        digitalWrite(MODEM_PWRKEY, HIGH);
-        modem.restart(); // try to recover
+        setupModem();
         delay(2000);     // small delay after restart
         attempts++;
     }
@@ -175,10 +160,7 @@ void CommunicationSIM800L::sendMPPTPayload()
         Serial.println("Modem is offline.");
         return;
     }
-    if (!ensureNetwork()) {
-        Serial.println("❌ Cannot send data, network is not ready.");
-        return; // handle offline scenario
-    }
+
     File original = LittleFS.open(MPPT_LOG_FILE_NAME, FILE_READ);
     String TEMP_FILE_NAME = String(MPPT_LOG_FILE_NAME) + ".tmp";
     if (!original)
@@ -201,6 +183,8 @@ void CommunicationSIM800L::sendMPPTPayload()
         String line = original.readStringUntil('\n');
         line.trim();
         if (line.length() == 0) continue;
+
+        ensureNetwork();
 
         Serial.printf("Begin request:\n");
         httpClient.beginRequest();
