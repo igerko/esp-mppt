@@ -1,30 +1,28 @@
-#include <cstdint>
-#include <ModbusMaster.h>
+#pragma once
 
-#ifndef SOLAR_MPPT_MONITOR_H
-#define SOLAR_MPPT_MONITOR_H
+#include "LoggingService.h"
 
 enum RegType
 {
-  REG_U16,
-  REG_U32
+    REG_U16,
+    REG_U32
 };
 
 struct RegisterInfo
 {
-  uint16_t address;
-  const char *name;
-  float scale;
-  RegType type;
+    uint16_t address;
+    const char* name;
+    float scale;
+    RegType type;
 };
 
 struct HoldingRegisterInfo
 {
-  uint16_t address;
-  const char *name;
+    uint16_t address;
+    const char* name;
 };
 
-constexpr RegisterInfo registers[] = {
+constexpr RegisterInfo mpptReadRegisters[] = {
     {0x3108, "Battery Voltage (V)", 0.01f, REG_U16},
     {0x3109, "Battery Output Current (A)", 0.01f, REG_U16},
     {0x310A, "Battery Output Power (W)", 0.01f, REG_U32},
@@ -55,10 +53,23 @@ constexpr RegisterInfo registers[] = {
     {0x3312, "Total Generated Energy (kWh)", 0.01f, REG_U32},
 
     // 🔋 Battery Current (signed!)
-    {0x331B, "Battery Current (A)", 0.01f, REG_U32}};
+    {0x331B, "Battery Current (A)", 0.01f, REG_U32}
+};
 
-constexpr uint16_t HR_LoadControlMode = 0x903D;
-constexpr HoldingRegisterInfo holdingRegisters[] = {
+struct DateTimeFields {
+    uint8_t second;
+    uint8_t minute;
+    uint8_t hour;
+    uint8_t day;
+    uint8_t month;
+    uint8_t year; // maybe offset, depends on device spec
+};
+
+constexpr uint16_t HR_RTC_SecondMinute = 0x9013;  // D7–0: Second, D15–8: Minute
+constexpr uint16_t HR_RTC_HourDay      = 0x9014;  // D7–0: Hour,  D15–8: Day
+constexpr uint16_t HR_RTC_MonthYear    = 0x9015;  // D7–0: Month, D15–8: Year
+constexpr uint16_t HR_LoadControlMode  = 0x903D;
+constexpr HoldingRegisterInfo mpptHoldingRegisters[] = {
     {HR_LoadControlMode, "Load Control Mode"},
     /*
       0: Manual Mode (Default)
@@ -69,31 +80,26 @@ constexpr HoldingRegisterInfo holdingRegisters[] = {
     */
 };
 
-#define RS485_RXD 25
-#define RS485_TXD 26
-#define RS485_DERE 27
-#define RS485_BAUD 115200
+constexpr int mpptRegistersCount = std::size(mpptReadRegisters) + std::size(mpptHoldingRegisters);
 
 class SolarMPPTMonitor
 {
 public:
-  SolarMPPTMonitor();
-  void setupRS465();
-  void readAndPrintRegisters();
-  void logCurrentData();
-  void sendLoggedDataMQTT();
-  void setDateTimeInMPPT(time_t datetime);
+    SolarMPPTMonitor();
+    static void setupRS465();
+
+    static void readAndPrintRegisters();
+    static LogEntry readLogsFromMPPT();
+    static bool setDatetimeInMPPT();
+    static bool readLoadState(bool& isOn);
+    static bool setLoad(bool enable);
 
 private:
-  static void preTransmission();
-  static void postTransmission();
-  bool readRegister(const RegisterInfo &reg, float &outValue);
-  bool readHoldingRegister(uint16_t address, uint16_t &outValue);
-  bool writeHoldingRegister(uint16_t address, uint16_t value);
-  bool readLoadState(bool &isOn);
-  bool setLoad(bool enable);
+    static void preTransmission();
+    static void postTransmission();
+    static bool readRegister(const RegisterInfo& reg, float& outValue);
+    static bool readHoldingRegister(uint16_t address, uint16_t& outValue);
+    static bool writeHoldingRegister(uint16_t address, uint16_t value);
 
-  void clearLoggedData();
+    static bool readDatetimeInMPPT(DateTimeFields &dt);
 };
-
-#endif
