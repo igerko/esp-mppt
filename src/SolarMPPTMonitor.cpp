@@ -5,12 +5,11 @@
 #include "TimeService.h"
 #include <time.h>
 
-const int MAX_RETRIES = 3; // how many times to retry
-const int RETRY_DELAY_MS = 50; // delay between retries (optional)
+constexpr int MAX_RETRIES = 3; // how many times to retry
+constexpr int RETRY_DELAY_MS = 50; // delay between retries (optional)
 
 SolarMPPTMonitor::SolarMPPTMonitor()
-{
-}
+= default;
 
 void SolarMPPTMonitor::setupRS465()
 {
@@ -62,34 +61,35 @@ bool SolarMPPTMonitor::writeHoldingRegister(uint16_t address, uint16_t value)
     uint8_t result = node.writeSingleRegister(address, value);
     if (result == node.ku8MBSuccess)
     {
-        Serial.print("Register 0x");
-        Serial.print(address, HEX);
-        Serial.print(" set to ");
-        Serial.println(value);
+        DBG_PRINT("[SolarMPPTMonitor] Register 0x");
+        DBG_PRINT2(address, HEX);
+        DBG_PRINT(" set to ");
+        DBG_PRINTLN(value);
         return true;
     }
-    Serial.print("Error while writing to 0x");
-    Serial.print(address, HEX);
-    Serial.print(": ");
-    Serial.println(result);
+    DBG_PRINT("[SolarMPPTMonitor] Error while writing to 0x");
+    DBG_PRINT2(address, HEX);
+    DBG_PRINT(": ");
+    DBG_PRINTLN(result);
     return false;
 }
 
-bool SolarMPPTMonitor::readLoadState(bool& isOn)
+bool SolarMPPTMonitor::readLoadState(int& loadState)
 {
     // coil 0x0002 = Remote control of load
     uint8_t result = node.readCoils(0x0002, 1);
+    loadState = -1;
     if (result == node.ku8MBSuccess)
     {
-        isOn = node.getResponseBuffer(0);
-        Serial.print("Current state LOAD: ");
-        Serial.println(isOn ? "ON ✅" : "OFF ❌");
+        loadState = node.getResponseBuffer(0);
+        DBG_PRINT("[SolarMPPTMonitor] Current LOAD state in MPPT: ");
+        DBG_PRINTLN(loadState ? "ON ✅" : "OFF ❌");
         return true;
     }
     else
     {
-        Serial.print("Error during read LOAD, code: ");
-        Serial.println(result);
+        DBG_PRINT("[SolarMPPTMonitor] Error during read LOAD, code: ");
+        DBG_PRINTLN(result);
         return false;
     }
 }
@@ -99,16 +99,16 @@ bool SolarMPPTMonitor::setLoad(bool enable)
     const uint8_t result = node.writeSingleCoil(0x0002, enable); // Coil 2 = Load control
     if (result == node.ku8MBSuccess)
     {
-        Serial.print("LOAD ");
-        Serial.println(enable ? "zapnutý ✅" : "vypnutý ❌");
+        DBG_PRINT("[SolarMPPTMonitor] LOAD set to MPPT: ");
+        DBG_PRINTLN(enable ? "ON" : "OFF");
         return true;
     }
     else
     {
-        Serial.print("Chyba pri ");
-        Serial.print(enable ? "zapínaní" : "vypínaní");
-        Serial.print(" LOAD, kód: ");
-        Serial.println(result);
+        DBG_PRINT("[SolarMPPTMonitor] Error during ");
+        DBG_PRINT(enable ? "turning on" : "turning off");
+        DBG_PRINT(" LOAD, code: ");
+        DBG_PRINTLN(result);
         return false;
     }
 }
@@ -119,32 +119,32 @@ void SolarMPPTMonitor::readAndPrintRegisters() // used for debug
     {
         if (float value; readRegister(r, value))
         {
-            Serial.print(r.name);
-            Serial.print(": ");
-            Serial.println(value);
+            DBG_PRINT(r.name);
+            DBG_PRINT(": ");
+            DBG_PRINTLN(value);
         }
         else
         {
-            Serial.print("Chyba pri čítaní ");
-            Serial.println(r.name);
+            DBG_PRINT("Error during reading");
+            DBG_PRINTLN(r.name);
         }
     }
-    Serial.println("-------------------------");
+    DBG_PRINTLN("-------------------------");
 
     if (uint16_t mode; readHoldingRegister(HR_LoadControlMode, mode))
     {
-        Serial.print("Load Control Mode: ");
-        Serial.println(mode);
+        DBG_PRINT("Load Control Mode: ");
+        DBG_PRINTLN(mode);
     }
     else
     {
-        Serial.println("Nepodarilo sa prečítať režim.");
+        DBG_PRINTLN("Cannot read control mode.");
     }
 
     // set load control mode to MANUAL
     writeHoldingRegister(HR_LoadControlMode, 0);
 
-    bool loadOn;
+    int loadOn;
     if (readLoadState(loadOn))
     {
         if (loadOn)
@@ -156,12 +156,15 @@ void SolarMPPTMonitor::readAndPrintRegisters() // used for debug
             setLoad(true);
         }
     }
-    Serial.println("--------------------------------------------------");
+    DBG_PRINTLN("--------------------------------------------------");
 }
 
 LogEntry SolarMPPTMonitor::readLogsFromMPPT()
 {
-    LogEntry logEntry(timeService.getTimeUTC());
+    DBG_PRINTLN("[SolarMPPTMonitor] Reading from MPPT");
+    int loadState;
+    readLoadState(loadState);
+    LogEntry logEntry(timeService.getTimeUTC(), loadState);
 
     for (auto& r : mpptReadRegisters)
     {
@@ -175,7 +178,7 @@ LogEntry SolarMPPTMonitor::readLogsFromMPPT()
                 success = true;
                 break;
             }
-            Serial.printf("Read attempt %d failed for %s (0x%04X)\n",
+            DBG_PRINTF("[SolarMPPTMonitor] Read attempt %d failed for %s (0x%04X)\n",
                           attempt, r.name, r.address);
             delay(RETRY_DELAY_MS);
         }
@@ -186,11 +189,10 @@ LogEntry SolarMPPTMonitor::readLogsFromMPPT()
         }
         else
         {
-            Serial.print("❌ Unable to read after retries: ");
-            Serial.println(r.name);
+            DBG_PRINT("[SolarMPPTMonitor] Unable to read after retries: ");
+            DBG_PRINTLN(r.name);
         }
     }
-    Serial.println("Reading  from MPPT");
 
     return logEntry;
 }
@@ -201,13 +203,13 @@ bool SolarMPPTMonitor::setDatetimeInMPPT()
     {
         DateTimeFields rtc{};
         readDatetimeInMPPT(rtc);
-        Serial.printf("RTC in MPPT: %02u-%02u-%02u %02u:%02u:%02u\n",
+        DBG_PRINTF("[SolarMPPTMonitor] RTC in MPPT: %02u-%02u-%02u %02u:%02u:%02u\n",
                       rtc.year, rtc.month, rtc.day,
                       rtc.hour, rtc.minute, rtc.second);
     }
 
 
-    Serial.println("Sending time to MPPT");
+    DBG_PRINTLN("[SolarMPPTMonitor] Sending time to MPPT");
 
     time_t datetime = TimeService::getTimeInTZ();
     if (datetime == -1)
@@ -240,7 +242,7 @@ bool SolarMPPTMonitor::setDatetimeInMPPT()
     {
         DateTimeFields rtc{};
         readDatetimeInMPPT(rtc);
-        Serial.printf("RTC in MPPT: %02u-%02u-%02u %02u:%02u:%02u\n",
+        DBG_PRINTF("[SolarMPPTMonitor] RTC in MPPT: %02u-%02u-%02u %02u:%02u:%02u\n",
                       rtc.year, rtc.month, rtc.day,
                       rtc.hour, rtc.minute, rtc.second);
     }

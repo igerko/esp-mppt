@@ -2,9 +2,10 @@
 #include "ICommunicationService.h"
 #include "SleepManager.h"
 
-LogEntry::LogEntry(const time_t ts)
+LogEntry::LogEntry(const time_t ts, const int loadState)
 {
     this->ts = ts;
+    this->loadState = loadState;
 }
 
 String LogEntry::toJson() const
@@ -15,6 +16,7 @@ String LogEntry::toJson() const
         doc[AdditionalJSONKeys::DEVICE_ID] = MY_ESP_DEVICE_ID;
         doc[AdditionalJSONKeys::SIGNAL_STRENGTH] = communicationService->getSignalStrengthPercentage();
         doc[AdditionalJSONKeys::TOTAL_WAKE_TIME] = sleepManager.getTotalWakeTime();
+        doc[AdditionalJSONKeys::LOAD_STATUS] = loadState;
 
         const JsonObject vals = doc[AdditionalJSONKeys::REGISTERS].to<JsonObject>();
         for (const auto& [fst, snd] : values)
@@ -40,10 +42,10 @@ void LoggingService::setup()
     if (!LittleFS.begin(true))
     {
         // `true` will format if mount fails
-        Serial.println("LittleFS mount failed!");
+        DBG_PRINTLN("[LoggingService] LittleFS mount failed!");
         return;
     }
-    Serial.println("LittleFS mounted.");
+    DBG_PRINTLN("[LoggingService] LittleFS mounted.");
 }
 
 size_t LoggingService::logMPPTEntryToFile(const LogEntry& log)
@@ -51,32 +53,17 @@ size_t LoggingService::logMPPTEntryToFile(const LogEntry& log)
     File f = LittleFS.open(MPPT_LOG_FILE_NAME, FILE_APPEND);
     if (!f)
     {
-        Serial.println("Failed to open log file for appending");
+        DBG_PRINTLN("[LoggingService] Failed to open log file for appending");
         return 0;
     }
     const size_t writeSize = f.println(log.toJson());
     f.close();
+    DBG_PRINTF("[LoggingService] Logged %zu bytes from MPPT\n", writeSize);
     return writeSize;
 }
 
 bool LoggingService::clearLogFile()
 {
-    Serial.println("Clearing log file.");
+    DBG_PRINTLN("[LoggingService] Clearing log file.");
     return LittleFS.remove(MPPT_LOG_FILE_NAME);
-}
-
-char* LoggingService::readLogFile() // todo: delete ?
-{
-    if (File f = LittleFS.open(MPPT_LOG_FILE_NAME, FILE_READ); !f) {
-        Serial.println("❌ Failed to open file");
-        static char emptyStr[] = "";
-        return emptyStr;
-    } else {
-        size_t size = f.size();
-        char *buffer = new char[size + 1];
-        f.readBytes(buffer, size);
-        buffer[size] = '\0';
-        f.close();
-        return buffer;
-    }
 }

@@ -9,6 +9,7 @@
 #include <base64.h>
 #include <esp_task_wdt.h>
 
+#include "LoadController.h"
 #include "SolarMPPTMonitor.h"
 
 
@@ -17,7 +18,7 @@ void CommunicationSIM800L::setupModemImpl()
     // Start power management
     if (setupPMU() == false)
     {
-        Serial.println("Setting power error");
+        DBG_PRINTLN("[CommunicationSIM800L] Setting power error");
     }
 
     // Keep reset high
@@ -39,51 +40,51 @@ void CommunicationSIM800L::setupModemImpl()
     SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
     while (!modem.testAT())
     {
-        Serial.println("Waiting for modem...");
+        DBG_PRINTLN("[CommunicationSIM800L] Waiting for modem...");
         delay(500);
     }
 
-    Serial.println("Restarting modem...");
+    DBG_PRINTLN("[CommunicationSIM800L] Restarting modem...");
     if (!modem.restart())
     {
-        Serial.println("Modem failed to restart");
+        DBG_PRINTLN("[CommunicationSIM800L] Modem failed to restart");
     }
     else
     {
-        Serial.println("Modem ready!");
+        DBG_PRINTLN("[CommunicationSIM800L] Modem ready!");
     }
-    Serial.print("Modem Info: ");
-    Serial.println(modem.getModemInfo());
+    DBG_PRINT("[CommunicationSIM800L] Modem Info: ");
+    DBG_PRINTLN(modem.getModemInfo());
 
     if (GSM_PIN && modem.getSimStatus() != 3)
     {
         modem.simUnlock(GSM_PIN);
     }
-    Serial.print("Waiting for network...");
+    DBG_PRINT("[CommunicationSIM800L] Waiting for network...");
     if (!modem.waitForNetwork())
     {
-        Serial.println(" fail");
+        DBG_PRINTLN(" fail");
         delay(5000);
         return;
     }
-    Serial.println(" success");
+    DBG_PRINTLN(" success");
     if (modem.isNetworkConnected())
     {
-        Serial.println("Network connected");
+        DBG_PRINTLN("[CommunicationSIM800L] Network connected");
     }
     // GPRS connection parameters are usually set after network registration
-    Serial.print(F("Connecting to "));
-    Serial.print(APN);
+    DBG_PRINT(F("[CommunicationSIM800L] Connecting to "));
+    DBG_PRINT(APN);
     if (!modem.gprsConnect(APN, GPRS_USER, GPRS_PWD))
     {
-        Serial.println(" fail");
+        DBG_PRINTLN(" fail");
         delay(10000);
         return;
     }
-    Serial.println(" success");
+    DBG_PRINTLN(" success");
     if (modem.isGprsConnected())
     {
-        Serial.println("GPRS connected");
+        DBG_PRINTLN("[CommunicationSIM800L] GPRS connected");
     }
 }
 
@@ -94,33 +95,38 @@ bool CommunicationSIM800L::ensureNetwork()
     int attempts = 0;
     bool atOK = false;
 
-    while (attempts < 3) {
-        Serial.println("Calling testAT");
-        if (modem.testAT()) {
+    while (attempts < 3)
+    {
+        DBG_PRINTLN("[CommunicationSIM800L] Calling testAT");
+        if (modem.testAT())
+        {
             atOK = true;
             break; // modem responded
         }
         setupModem();
-        delay(2000);     // small delay after restart
+        delay(2000); // small delay after restart
         attempts++;
     }
-    if (!atOK) {
-        Serial.println("[NET] Modem failed to respond after 3 attempts!");
+    if (!atOK)
+    {
+        DBG_PRINTLN("[CommunicationSIM800L] Modem failed to respond after 3 attempts!");
         return false; // give up
     }
-    Serial.println("AT OK");
+    DBG_PRINTLN("[CommunicationSIM800L] AT OK");
 
     // 3) Check if GPRS is connected
-    Serial.print("Is GPRS connected ? ... ");
-    if (!modem.isGprsConnected()) {
-        Serial.println("[NET] GPRS not connected, trying to connect...");
-        if (!modem.gprsConnect(APN, GPRS_USER, GPRS_PWD)) {
-            Serial.println("[NET] GPRS connection failed.");
+    DBG_PRINT("[CommunicationSIM800L] Is GPRS connected ? ... ");
+    if (!modem.isGprsConnected())
+    {
+        DBG_PRINTLN("\n[CommunicationSIM800L]  GPRS not connected, trying to connect...");
+        if (!modem.gprsConnect(APN, GPRS_USER, GPRS_PWD))
+        {
+            DBG_PRINTLN("[CommunicationSIM800L] GPRS connection failed.");
             return false;
         }
-        Serial.println("[NET] GPRS connected.");
+        DBG_PRINTLN("[CommunicationSIM800L] GPRS connected.");
     }
-    Serial.println("yes");
+    DBG_PRINTLN("yes");
 
     // 4) Everything is ready
     return true;
@@ -157,7 +163,7 @@ void CommunicationSIM800L::sendMPPTPayload()
 {
     if (!isModemOn())
     {
-        Serial.println("Modem is offline.");
+        DBG_PRINTLN("[CommunicationSIM800L] Modem is offline.");
         return;
     }
 
@@ -165,17 +171,21 @@ void CommunicationSIM800L::sendMPPTPayload()
     String TEMP_FILE_NAME = String(MPPT_LOG_FILE_NAME) + ".tmp";
     if (!original)
     {
-        Serial.println("[FS] File not found");
+        DBG_PRINTLN("[CommunicationSIM800L]  File not found");
         return;
     }
 
     File tempFile = LittleFS.open(TEMP_FILE_NAME.c_str(), "w");
     if (!tempFile)
     {
-        Serial.println("[FS] Could not create temp file");
+        DBG_PRINTLN("[CommunicationSIM800L]  Could not create temp file");
         original.close();
         return;
     }
+
+    httpClientTelegraf.connect(HTTP_SERVER, HTTP_TELEGRAF_PORT);
+    if (httpClientTelegraf.connected()) DBG_PRINTF("[CommunicationSIM800L] HTTP Client Connected to %s:%d\n", HTTP_SERVER, HTTP_TELEGRAF_PORT);
+
 
     size_t failedLines = 0;
     while (original.available())
@@ -186,86 +196,70 @@ void CommunicationSIM800L::sendMPPTPayload()
 
         ensureNetwork();
 
-        Serial.printf("Begin request:\n");
-        httpClient.beginRequest();
-        httpClient.post(HTTP_RESOURCE_MPPT);
-        httpClient.sendHeader("Content-Type", "application/json");
+        DBG_PRINTF("[CommunicationSIM800L] Begin request:\n");
+        httpClientTelegraf.beginRequest();
+        httpClientTelegraf.post(HTTP_RESOURCE_MPPT);
+        httpClientTelegraf.sendHeader("Content-Type", "application/json");
         String auth = String(TELEGRAM_HTTP_USER) + ":" + TELEGRAM_HTTP_PASS;
         String authBase64 = base64::encode(auth);
-        httpClient.sendHeader("Authorization", "Basic " + authBase64);
-        httpClient.sendHeader("Content-Length", String(line.length()));
-        httpClient.endRequest();
+        httpClientTelegraf.sendHeader("Authorization", "Basic " + authBase64);
+        httpClientTelegraf.sendHeader("Content-Length", String(line.length()));
+        httpClientTelegraf.endRequest();
 
-        Serial.printf("Sending HTTP request\n");
-        httpClient.print(line);
-        int status = httpClient.responseStatusCode();
-        String responseBody = httpClient.responseBody();
-        Serial.println("Response body: " + String(responseBody));
-        httpClient.stop();
+        DBG_PRINTF("[CommunicationSIM800L] Sending HTTP request\n");
+        httpClientTelegraf.print(line);
+        int status = httpClientTelegraf.responseStatusCode();
+        String responseBody = httpClientTelegraf.responseBody();
+        DBG_PRINTLN("[CommunicationSIM800L] Response body: " + String(responseBody));
+        httpClientTelegraf.stop();
 
-        Serial.printf("[HTTP] Sent one event, status: %d\n", status);
+        DBG_PRINTF("[CommunicationSIM800L] Sent one event, status: %d\n", status);
         if (status < 200 || status > 299)
         {
             failedLines += 1;
-            Serial.println("[HTTP] Line not written correctly -> moving to .tmp");
+            DBG_PRINTLN("[CommunicationSIM800L] Line not written correctly -> moving to .tmp");
             tempFile.println(line);
         }
         esp_task_wdt_reset();
     }
     original.close();
     tempFile.close();
-    Serial.println("[FS] Remove original file");
+    DBG_PRINTLN("[CommunicationSIM800L] Remove original file");
     LittleFS.remove(MPPT_LOG_FILE_NAME);
+
+    // set failed lines count in Preferences
+    Preferences prefs;
+    prefs.begin(PREF_NAME, false);
+    prefs.putUInt(FAILED_LINES_COUNT, failedLines);
+    prefs.end();
+
     if (failedLines > 0)
     {
-        Serial.printf("[FS] Failed %d lines. Moving TMP to ORIGINAL.\n", failedLines);
+        DBG_PRINTF("[CommunicationSIM800L] Failed %d lines. Moving TMP to ORIGINAL.\n", failedLines);
         LittleFS.rename(TEMP_FILE_NAME, MPPT_LOG_FILE_NAME);
     }
     else LittleFS.remove(TEMP_FILE_NAME);
 }
 
-void CommunicationSIM800L::sendLoadStatusPayload()
+void CommunicationSIM800L::downloadConfig()
 {
     if (!isModemOn())
     {
-        Serial.println("Modem is offline.");
+        DBG_PRINTLN("[CommunicationSIM800L] Modem is offline.");
         return;
     }
-    if (!ensureNetwork()) {
-        Serial.println("❌ Cannot send data, network is not ready.");
+    if (!ensureNetwork())
+    {
+        DBG_PRINTLN("[CommunicationSIM800L] Cannot send data, network is not ready.");
         return; // handle offline scenario
     }
+    httpClientFastApi.connect(HTTP_SERVER, HTTP_API_PORT);
+    if (httpClientFastApi.connected()) DBG_PRINTF("[CommunicationSIM800L] HTTP Client Connected to %s:%d\n", HTTP_SERVER, HTTP_TELEGRAF_PORT);
 
-    bool loadStatus;
-    int intLoadStatus = (SolarMPPTMonitor::readLoadState(loadStatus), loadStatus);
-    JsonDocument doc;
-    doc[AdditionalJSONKeys::TIMESTAMP] = TimeService::getTimeUTC();
-    doc[AdditionalJSONKeys::DEVICE_ID] = MY_ESP_DEVICE_ID;
-    doc[AdditionalJSONKeys::LOAD_STATUS] = intLoadStatus;
-    String out;
-    serializeJson(doc, out);
-
-
-    // Send HTTP POST
-    httpClient.beginRequest();
-    httpClient.setTimeout(10000);  // 10 seconds
-    httpClient.post(HTTP_RESOURCE_LOAD_STATUS); // e.g. "/loadstatus"
-    httpClient.sendHeader("Content-Type", "application/json");
-
-    // Basic Auth
-    String auth = String(TELEGRAM_HTTP_USER) + ":" + TELEGRAM_HTTP_PASS;
-    String authBase64 = base64::encode(auth);
-    httpClient.sendHeader("Authorization", "Basic " + authBase64);
-
-    // Content length must be actual payload length
-    httpClient.sendHeader("Content-Length", String(out.length()));
-    httpClient.endRequest();
-
-    // Write body
-    httpClient.print(out);
-
-    // Done
-    httpClient.stop();
+    httpClientFastApi.get(HTTP_API_RESOURCE_READ_CONFIG);
+    String responseBody = httpClientTelegraf.responseBody();
+    loadController.updateConfig(responseBody);
+    httpClientFastApi.stop();
 }
 
 bool CommunicationSIM800L::setupPMU()

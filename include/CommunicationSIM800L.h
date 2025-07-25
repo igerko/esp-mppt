@@ -14,7 +14,9 @@ class CommunicationSIM800L final : public ICommunicationService
 public:
     explicit CommunicationSIM800L()
         : modem(Serial1),
-          tinyGsmClient(modem), httpClient(tinyGsmClient, HTTP_SERVER, HTTP_PORT)
+          tinyGsmClient(modem),
+          httpClientTelegraf(tinyGsmClient, HTTP_SERVER, HTTP_TELEGRAF_PORT),
+          httpClientFastApi(tinyGsmClient, HTTP_SERVER, HTTP_API_PORT)
     {
     }
 
@@ -25,7 +27,7 @@ public:
     std::optional<timeval> getTimeFromModem() override;
 
     void sendMPPTPayload() override;
-    void sendLoadStatusPayload() override;
+    void downloadConfig() override;
 
 protected:
     void setupModemImpl() override;
@@ -33,8 +35,8 @@ protected:
 
 private:
     static bool setupPMU();
-
     TinyGsm modem;
     TinyGsmClient tinyGsmClient;
-    HttpClient httpClient;
+    HttpClient httpClientTelegraf;
+    HttpClient httpClientFastApi;
 };

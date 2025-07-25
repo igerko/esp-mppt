@@ -26,7 +26,7 @@ LoadController loadController;
 void setup()
 {
     esp_task_wdt_init(300, true); // 5 minutes
-    esp_task_wdt_add(NULL);
+    esp_task_wdt_add(nullptr);
     setenv("TZ", "CET-1CEST,M3.5.0/2,M10.5.0/3", 1);
     tzset();
 
@@ -35,33 +35,26 @@ void setup()
     delay(100);
     SolarMPPTMonitor::setupRS465();
     LoggingService::setup();
-    // TODO: do not setup modem always
-    // TODO: enable modem and http when:
-    //      - syncing files
-    //      - setting load
-    //      - download config
+    loadController.setup();
 
-    // if (!wakenFromDeepSleep || !isTimeInitializedFromModem){
-    //     communicationService->setupModem();
-    // }
-    if (!communicationService->isModemOn())
+    if (TimeService::isTimeToUseModem() && !communicationService->isModemOn())
         communicationService->setupModem();
     esp_task_wdt_reset();
-
 }
 
 void loop()
 {
     esp_task_wdt_reset();
+
     loadController.setLoadBasedOnConfig();
+    LoggingService::logMPPTEntryToFile(SolarMPPTMonitor::readLogsFromMPPT());
 
-
-    const size_t loggedSize = LoggingService::logMPPTEntryToFile(SolarMPPTMonitor::readLogsFromMPPT());
-    Serial.printf("Logged %zu bytes from MPPT\n", loggedSize);
-
-    communicationService->sendMPPTPayload();
-    communicationService->sendLoadStatusPayload();
+    if (communicationService->isModemOn())
+    {
+        communicationService->downloadConfig();
+        communicationService->sendMPPTPayload();
+        TimeService::updateLastModemPreference();
+    }
     esp_task_wdt_reset();
-    delay(60000);
-    // sleepManager.activateDeepSleep();
+    sleepManager.activateDeepSleep();
 }

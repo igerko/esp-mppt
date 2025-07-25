@@ -16,8 +16,8 @@ public:
 
     virtual int getSignalStrengthPercentage() = 0;
 
+    virtual void downloadConfig() = 0;
     virtual void sendMPPTPayload() = 0;
-    virtual void sendLoadStatusPayload() = 0;
 
     void setupModem()
     {

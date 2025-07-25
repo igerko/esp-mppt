@@ -8,7 +8,6 @@
 #include <Preferences.h>
 
 constexpr auto KEY_TOTAL_AWAKE_TIME = "awake_time";
-constexpr auto PREF_NAME = "sleep";
 Preferences sleepPrefs;
 
 
@@ -18,9 +17,9 @@ SleepManager::SleepManager(): wakeStartMillis(millis())
 
 void SleepManager::activateDeepSleep()
 {
-    Serial.print("Power off modem ...");
+    DBG_PRINT("[SleepManager] Power off modem ...");
     communicationService->powerOffModem();
-    Serial.println("done");
+    DBG_PRINTLN("done");
 
     wakenFromDeepSleep = true;
 
@@ -35,7 +34,7 @@ void SleepManager::activateDeepSleep()
     sleepPrefs.putULong64(KEY_TOTAL_AWAKE_TIME, totalAwakeTime);
     sleepPrefs.end();
 
-    Serial.printf("[SleepManager] Saving total awake time: %llu seconds (this session: %lu)\n",
+    DBG_PRINTF("[SleepManager] Saving total awake time: %llu seconds (this session: %lu)\n",
                   totalAwakeTime, sessionAwake);
 
     // set time in slow memory
@@ -44,8 +43,8 @@ void SleepManager::activateDeepSleep()
     localtime_r(&now, &t);
     storedEpoch = now;
     // put ESP to deep sleep
-    Serial.println("[SleepManager] Going to deep sleep...");
-    Serial.println("---------------------------");
+    DBG_PRINTLN("[SleepManager] Going to deep sleep...");
+    DBG_PRINTLN("---------------------------");
     esp_sleep_enable_timer_wakeup(DEEP_SLEEP_DURATION * uS_TO_S_FACTOR);
     esp_deep_sleep_start();
 }
@@ -65,7 +64,7 @@ void SleepManager::afterWakeUpSetup()
         return;
     timeService.setTimeAfterWakeUp();
 
-    Serial.println("[SleepManager] afterWakeUpSetup done.");
+    DBG_PRINTLN("[SleepManager] afterWakeUpSetup done.");
 }
 
 uint64_t SleepManager::getTotalWakeTime() const

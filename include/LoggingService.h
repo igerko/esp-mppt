@@ -18,12 +18,13 @@ namespace AdditionalJSONKeys
 class LogEntry
 {
 public:
-    explicit LogEntry(time_t ts);
+    explicit LogEntry(time_t ts, int loadState);
     [[nodiscard]] String toJson() const;
     void addValue(uint16_t regAddr, float regVal);
 
 private:
     uint32_t ts;
+    int loadState;
     std::map<uint16_t, float> values;
 };
 
@@ -34,5 +35,4 @@ public:
     static void setup();
     static size_t logMPPTEntryToFile(const LogEntry& log);
     static bool clearLogFile();
-    static char *readLogFile();
 };

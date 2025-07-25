@@ -1,6 +1,20 @@
 // globals.h
 #pragma once
 
+#define DEBUG_MODE 1  // set to 1 for debugging
+
+#if DEBUG_MODE
+  #define DBG_PRINT(x) Serial.print(x)
+  #define DBG_PRINT2(x, y) Serial.print(x, y)
+  #define DBG_PRINTF(...) Serial.printf(__VA_ARGS__)
+  #define DBG_PRINTLN(x) Serial.println(x)
+#else
+  #define DBG_PRINT(x)
+  #define DBG_PRINT2(x, y)
+  #define DBG_PRINTF(...)
+  #define DBG_PRINTLN(x)
+#endif
+
 #include <HardwareSerial.h>
 #include <ModbusMaster.h>
 
@@ -18,12 +32,14 @@ extern LoadController loadController;
 #define SerialAT Serial1
 
 #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
-#define DEEP_SLEEP_DURATION  60   /* Time ESP32 will go to sleep (in seconds) */
+#define DEEP_SLEEP_DURATION  120   /* Time ESP32 will go to sleep (in seconds) */
 
 #define DEBUG true
 
 #define MPPT_LOG_FILE_NAME "/mppt_log.log"
 #define MY_ESP_DEVICE_ID "crss"
+#define PREF_NAME "crss-pref"
+#define FAILED_LINES_COUNT "failed_lines_c"
 
 // GPRS APN, credentials, SIM PIN etc
 #define APN "internet"
@@ -33,10 +49,11 @@ extern LoadController loadController;
 
 // HTTP TODO: make it HTTPS
 #define HTTP_SERVER "vps.igerko.com" // TODO Implement
-#define HTTP_PORT 8081
+#define HTTP_TELEGRAF_PORT 8081
 #define HTTP_RESOURCE_MPPT "/crss"
-#define HTTP_RESOURCE_LOAD_STATUS "/load_status"
-#define HTTP_RESOURCE_READ_CONFIG "/read_config"
+
+#define HTTP_API_PORT 8555
+#define HTTP_API_RESOURCE_READ_CONFIG "/"
 
 // RS485 pins
 #define RS485_RXD 19

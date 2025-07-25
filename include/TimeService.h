@@ -1,7 +1,7 @@
 #pragma once
 
 #include <esp_attr.h>
-#include <optional>
+#include <Preferences.h>
 
 class TimeService
 {
@@ -11,6 +11,11 @@ public:
     static void setESPTimeFromModem(const timeval& timeval);
     static void setTimeAfterWakeUp();
     static void debugTime();
+    static time_t parseISO8601(const char *isoStr);
+    static bool isTimeToUseModem();
+    static void updateLastModemPreference();
+private:
+    static time_t myTimegm(tm *tm);
 };
 
 inline RTC_DATA_ATTR bool isTimeInitializedFromModem = false;

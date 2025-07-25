@@ -91,12 +91,10 @@ public:
     static void readAndPrintRegisters();
     static LogEntry readLogsFromMPPT();
     static bool setDatetimeInMPPT();
-    static bool readLoadState(bool& isOn);
+    static bool readLoadState(int& loadState);
     static bool setLoad(bool enable);
 
 private:
-    static void preTransmission();
-    static void postTransmission();
     static bool readRegister(const RegisterInfo& reg, float& outValue);
     static bool readHoldingRegister(uint16_t address, uint16_t& outValue);
     static bool writeHoldingRegister(uint16_t address, uint16_t value);
