@@ -10,6 +10,9 @@ public:
     void updateConfig(const String &payload);
     void setLoadBasedOnConfig() const;
 
+    void setNextLoadOn(time_t t) { nextLoadOn_ = t; }
+    void setNextLoadOff(time_t t) { nextLoadOff_ = t; }
+
 private:
     time_t getNextLoadOnDatetime() const { return nextLoadOn_; }
     time_t getNextLoadOffDatetime() const { return nextLoadOff_; }

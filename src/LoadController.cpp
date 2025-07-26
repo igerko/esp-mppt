@@ -52,10 +52,22 @@ void LoadController::updateConfig(const String &payload) {
                   (long)nextLoadOn_, (long)nextLoadOff_);
 }
 
-void LoadController::setLoadBasedOnConfig() const
-{
+bool isInWindow(time_t current, time_t on, time_t off) {
+    if (on == 0 || off == 0) return false;
+
+    if (on < off) {
+        // same-day window
+        return (current > on && current < off);
+    } else {
+        // overnight window
+        return (current > on || current < off);
+    }
+}
+
+void LoadController::setLoadBasedOnConfig() const {
     time_t currentTime = timeService.getTimeUTC();
     if (currentTime == 0) return;
+
     int loadStatus;
     bool readStatus = SolarMPPTMonitor::readLoadState(loadStatus);
 
@@ -65,20 +77,17 @@ void LoadController::setLoadBasedOnConfig() const
     DBG_PRINTF("  nextLoadOff_ = %lu\n", (unsigned long)nextLoadOff_);
     DBG_PRINTF("  readStatus = %s, loadStatus = %d\n", readStatus ? "true" : "false", loadStatus);
 
-    if (nextLoadOn_ == 0 || nextLoadOff_ == 0 || currentTime > nextLoadOff_)
-    {
-        DBG_PRINTF("  -> Turning load OFF (initial or past nextLoadOff_)\n");
+    if (!readStatus) {
+        DBG_PRINTF("  -> Read status false, turning OFF\n");
         SolarMPPTMonitor::setLoad(false);
         return;
     }
 
-    if (readStatus && currentTime > nextLoadOn_ && currentTime < nextLoadOff_)
-    {
-        DBG_PRINTF("  -> Conditions met, turning load ON\n");
+    if (isInWindow(currentTime, nextLoadOn_, nextLoadOff_)) {
+        DBG_PRINTF("  -> Conditions met, turning ON\n");
         SolarMPPTMonitor::setLoad(true);
-        return;
+    } else {
+        DBG_PRINTF("  -> Conditions NOT met, turning OFF\n");
+        SolarMPPTMonitor::setLoad(false);
     }
-
-    DBG_PRINTF("  -> Conditions NOT met, turning load OFF\n");
-    SolarMPPTMonitor::setLoad(false);
 }
