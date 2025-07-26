@@ -113,52 +113,6 @@ bool SolarMPPTMonitor::setLoad(bool enable)
     }
 }
 
-void SolarMPPTMonitor::readAndPrintRegisters() // used for debug
-{
-    for (auto& r : mpptReadRegisters)
-    {
-        if (float value; readRegister(r, value))
-        {
-            DBG_PRINT(r.name);
-            DBG_PRINT(": ");
-            DBG_PRINTLN(value);
-        }
-        else
-        {
-            DBG_PRINT("Error during reading");
-            DBG_PRINTLN(r.name);
-        }
-    }
-    DBG_PRINTLN("-------------------------");
-
-    if (uint16_t mode; readHoldingRegister(HR_LoadControlMode, mode))
-    {
-        DBG_PRINT("Load Control Mode: ");
-        DBG_PRINTLN(mode);
-    }
-    else
-    {
-        DBG_PRINTLN("Cannot read control mode.");
-    }
-
-    // set load control mode to MANUAL
-    writeHoldingRegister(HR_LoadControlMode, 0);
-
-    int loadOn;
-    if (readLoadState(loadOn))
-    {
-        if (loadOn)
-        {
-            setLoad(false);
-        }
-        else
-        {
-            setLoad(true);
-        }
-    }
-    DBG_PRINTLN("--------------------------------------------------");
-}
-
 LogEntry SolarMPPTMonitor::readLogsFromMPPT()
 {
     DBG_PRINTLN("[SolarMPPTMonitor] Reading from MPPT");

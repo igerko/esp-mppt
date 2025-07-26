@@ -54,6 +54,7 @@ void loop()
         communicationService->downloadConfig();
         communicationService->sendMPPTPayload();
         TimeService::updateLastModemPreference();
+        loadController.setLoadBasedOnConfig();
     }
     esp_task_wdt_reset();
     sleepManager.activateDeepSleep();

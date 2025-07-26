@@ -89,42 +89,76 @@ void LoadController::setLoadBasedOnConfig() const
     DBG_PRINTF("  batteryTemp = %.2f °C\n", batteryTemp);
     DBG_PRINTF("  readStatus = %s, loadStatus = %d\n", readLoadStatus ? "true" : "false", loadStatus);
 
+    auto setLoadIfChanged = [&](bool desiredState) {
+        if (loadStatus < 0) {
+            DBG_PRINTF("  -> loadStatus unknown (%d), forcing state %s\n",
+                       loadStatus, desiredState ? "ON" : "OFF");
+            SolarMPPTMonitor::setLoad(desiredState);
+            return;
+        }
+
+        bool currentState = (loadStatus != 0);
+        if (currentState != desiredState) {
+            DBG_PRINTF("  -> Changing load state to %s (current=%s)\n",
+                       desiredState ? "ON" : "OFF",
+                       currentState ? "ON" : "OFF");
+            SolarMPPTMonitor::setLoad(desiredState);
+        } else {
+            DBG_PRINTF("  -> Desired state = current state (%s), no change\n",
+                       desiredState ? "ON" : "OFF");
+        }
+    };
+
     if (readBatteryStatus)
     {
-        float socCutoff;
-        if (batteryTemp < 0.0f)
-        {
-            socCutoff = 60.0f;
-        }
-        else
-        {
-            socCutoff = 50.0f;
-        }
-        DBG_PRINTF("  Battery percentage cutoff: %.1f %%\n", socCutoff);
+        float cutoffHigh;
+        float cutoffLow;
 
-        if (batteryPercent < socCutoff)
-        {
-            DBG_PRINTF("  -> Battery percentage bellow cutoff, turning OFF\n");
-            SolarMPPTMonitor::setLoad(false);
-            return;
+        if (batteryTemp < 0.0f) {
+            cutoffHigh = 65.0f;
+            cutoffLow  = 52.0f;
+        } else {
+            // leto
+            cutoffHigh = 60.0f;
+            cutoffLow  = 47.0f;
+        }
+
+        bool loadWasOn = (loadStatus != 0);
+        DBG_PRINTF("  cutoffHigh = %.1f %% , cutoffLow = %.1f %% , loadWasOn = %s\n",
+                   cutoffHigh, cutoffLow, loadWasOn ? "true" : "false");
+
+        if (loadWasOn) {
+            if (batteryPercent < cutoffLow) {
+                DBG_PRINTF("  -> Battery SOC %.1f%% < cutoffLow %.1f%%, turning OFF\n",
+                           batteryPercent, cutoffLow);
+                setLoadIfChanged(false);
+                return;
+            }
+        } else {
+            if (batteryPercent < cutoffHigh) {
+                DBG_PRINTF("  -> Battery SOC %.1f%% < cutoffHigh %.1f%%, keep OFF\n",
+                           batteryPercent, cutoffHigh);
+                setLoadIfChanged(false);
+                return;
+            }
         }
     }
 
     if (!readLoadStatus)
     {
-        DBG_PRINTF("  -> Read status false, turning OFF\n");
-        SolarMPPTMonitor::setLoad(false);
+        DBG_PRINTF("  -> Read status false\n");
+        setLoadIfChanged(false);
         return;
     }
 
     if (isInWindow(currentTime, nextLoadOn_, nextLoadOff_))
     {
-        DBG_PRINTF("  -> Conditions met, turning ON\n");
-        SolarMPPTMonitor::setLoad(true);
+        DBG_PRINTF("  -> Conditions met\n");
+        setLoadIfChanged(true);
     }
     else
     {
-        DBG_PRINTF("  -> Conditions NOT met, turning OFF\n");
-        SolarMPPTMonitor::setLoad(false);
+        DBG_PRINTF("  -> Conditions NOT met\n");
+        setLoadIfChanged(false);
     }
 }

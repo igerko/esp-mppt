@@ -104,7 +104,6 @@ public:
     SolarMPPTMonitor();
     static void setupRS465();
 
-    static void readAndPrintRegisters();
     static LogEntry readLogsFromMPPT();
     static bool setDatetimeInMPPT();
     static bool readLoadState(int& loadState);
