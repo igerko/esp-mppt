@@ -76,31 +76,29 @@ void CommunicationSIM800L::setupModemImpl() {
 
 bool CommunicationSIM800L::ensureNetwork() {
   // 1) Check if the modem responds to AT commands, retry up to 3 times
-  int attempts = 0;
-  bool atOK = false;
+  int  attempts = 0;
+  bool atOK     = false;
 
   while (attempts < 3) {
     DBG_PRINTLN("[CommunicationSIM800L] Calling testAT");
     if (modem.testAT()) {
       atOK = true;
-      break; // modem responded
+      break;  // modem responded
     }
     setupModem();
-    delay(2000); // small delay after restart
+    delay(2000);  // small delay after restart
     attempts++;
   }
   if (!atOK) {
-    DBG_PRINTLN(
-        "[CommunicationSIM800L] Modem failed to respond after 3 attempts!");
-    return false; // give up
+    DBG_PRINTLN("[CommunicationSIM800L] Modem failed to respond after 3 attempts!");
+    return false;  // give up
   }
   DBG_PRINTLN("[CommunicationSIM800L] AT OK");
 
   // 3) Check if GPRS is connected
   DBG_PRINT("[CommunicationSIM800L] Is GPRS connected ? ... ");
   if (!modem.isGprsConnected()) {
-    DBG_PRINTLN(
-        "\n[CommunicationSIM800L]  GPRS not connected, trying to connect...");
+    DBG_PRINTLN("\n[CommunicationSIM800L]  GPRS not connected, trying to connect...");
     if (!modem.gprsConnect(APN, GPRS_USER, GPRS_PWD)) {
       DBG_PRINTLN("[CommunicationSIM800L] GPRS connection failed.");
       return false;
@@ -120,19 +118,19 @@ std::optional<timeval> CommunicationSIM800L::getTimeFromModem() {
 
     int yy = 0, MM = 0, dd = 0, hh = 0, mi = 0, ss = 0, tz_quarters = 0;
     sscanf(timeStr.c_str(),
-           " \"%2d/%2d/%2d,%2d:%2d:%2d%3d\"", // NOLINT(*-err34-c)
+           " \"%2d/%2d/%2d,%2d:%2d:%2d%3d\"",  // NOLINT(*-err34-c)
            &yy, &MM, &dd, &hh, &mi, &ss, &tz_quarters);
 
-    tm t = {};
-    t.tm_year = 2000 + yy - 1900;
-    t.tm_mon = MM - 1;
-    t.tm_mday = dd;
-    t.tm_hour = hh;
-    t.tm_min = mi;
-    t.tm_sec = ss;
-    t.tm_isdst = -1;
-    time_t utcTime = mktime(&t); // mktime already converts local tm to UTC
-    timeval now = {.tv_sec = utcTime, .tv_usec = 0};
+    tm t            = {};
+    t.tm_year       = 2000 + yy - 1900;
+    t.tm_mon        = MM - 1;
+    t.tm_mday       = dd;
+    t.tm_hour       = hh;
+    t.tm_min        = mi;
+    t.tm_sec        = ss;
+    t.tm_isdst      = -1;
+    time_t  utcTime = mktime(&t);  // mktime already converts local tm to UTC
+    timeval now     = {.tv_sec = utcTime, .tv_usec = 0};
     return now;
   }
   return std::nullopt;
@@ -144,7 +142,7 @@ void CommunicationSIM800L::sendMPPTPayload() {
     return;
   }
 
-  File original = LittleFS.open(MPPT_LOG_FILE_NAME, FILE_READ);
+  File   original       = LittleFS.open(MPPT_LOG_FILE_NAME, FILE_READ);
   String TEMP_FILE_NAME = String(MPPT_LOG_FILE_NAME) + ".tmp";
   if (!original) {
     DBG_PRINTLN("[CommunicationSIM800L]  File not found");
@@ -160,8 +158,7 @@ void CommunicationSIM800L::sendMPPTPayload() {
 
   httpClientTelegraf.connect(HTTP_SERVER, HTTP_TELEGRAF_PORT);
   if (httpClientTelegraf.connected())
-    DBG_PRINTF("[CommunicationSIM800L] HTTP Client Connected to %s:%d\n",
-               HTTP_SERVER, HTTP_TELEGRAF_PORT);
+    DBG_PRINTF("[CommunicationSIM800L] HTTP Client Connected to %s:%d\n", HTTP_SERVER, HTTP_TELEGRAF_PORT);
 
   size_t failedLines = 0;
   while (original.available()) {
@@ -176,7 +173,7 @@ void CommunicationSIM800L::sendMPPTPayload() {
     httpClientTelegraf.beginRequest();
     httpClientTelegraf.post(HTTP_RESOURCE_MPPT);
     httpClientTelegraf.sendHeader("Content-Type", "application/json");
-    String auth = String(TELEGRAM_HTTP_USER) + ":" + TELEGRAM_HTTP_PASS;
+    String auth       = String(TELEGRAM_HTTP_USER) + ":" + TELEGRAM_HTTP_PASS;
     String authBase64 = base64::encode(auth);
     httpClientTelegraf.sendHeader("Authorization", "Basic " + authBase64);
     httpClientTelegraf.sendHeader("Content-Length", String(line.length()));
@@ -184,17 +181,17 @@ void CommunicationSIM800L::sendMPPTPayload() {
 
     DBG_PRINTF("[CommunicationSIM800L] Sending HTTP request\n");
     httpClientTelegraf.print(line);
-    int status = httpClientTelegraf.responseStatusCode();
+    int    status       = httpClientTelegraf.responseStatusCode();
     String responseBody = httpClientTelegraf.responseBody();
-    DBG_PRINTLN("[CommunicationSIM800L] Response body: " +
-                String(responseBody));
+    DBG_PRINTLN("[CommunicationSIM800L] Response body: " + String(responseBody));
     httpClientTelegraf.stop();
 
     DBG_PRINTF("[CommunicationSIM800L] Sent one event, status: %d\n", status);
     if (status < 200 || status > 299) {
       failedLines += 1;
-      DBG_PRINTLN("[CommunicationSIM800L] Line not written correctly -> moving "
-                  "to .tmp");
+      DBG_PRINTLN(
+          "[CommunicationSIM800L] Line not written correctly -> moving "
+          "to .tmp");
       tempFile.println(line);
     }
     esp_task_wdt_reset();
@@ -211,9 +208,7 @@ void CommunicationSIM800L::sendMPPTPayload() {
   prefs.end();
 
   if (failedLines > 0) {
-    DBG_PRINTF(
-        "[CommunicationSIM800L] Failed %d lines. Moving TMP to ORIGINAL.\n",
-        failedLines);
+    DBG_PRINTF("[CommunicationSIM800L] Failed %d lines. Moving TMP to ORIGINAL.\n", failedLines);
     LittleFS.rename(TEMP_FILE_NAME, MPPT_LOG_FILE_NAME);
   } else
     LittleFS.remove(TEMP_FILE_NAME);
@@ -225,14 +220,12 @@ void CommunicationSIM800L::downloadConfig() {
     return;
   }
   if (!ensureNetwork()) {
-    DBG_PRINTLN(
-        "[CommunicationSIM800L] Cannot send data, network is not ready.");
-    return; // handle offline scenario
+    DBG_PRINTLN("[CommunicationSIM800L] Cannot send data, network is not ready.");
+    return;  // handle offline scenario
   }
   httpClientFastApi.connect(HTTP_SERVER, HTTP_API_PORT);
   if (httpClientFastApi.connected())
-    DBG_PRINTF("[CommunicationSIM800L] HTTP Client Connected to %s:%d\n",
-               HTTP_SERVER, HTTP_TELEGRAF_PORT);
+    DBG_PRINTF("[CommunicationSIM800L] HTTP Client Connected to %s:%d\n", HTTP_SERVER, HTTP_TELEGRAF_PORT);
 
   httpClientFastApi.get(HTTP_API_RESOURCE_READ_CONFIG);
   String responseBody = httpClientTelegraf.responseBody();
@@ -250,7 +243,7 @@ bool CommunicationSIM800L::setupPMU() {
 
 int CommunicationSIM800L::getSignalStrengthPercentage() {
   if (modem.isNetworkConnected()) {
-    const int rssi = modem.getSignalQuality(); // 0–31
+    const int rssi = modem.getSignalQuality();  // 0–31
     if (rssi == 99) {
       return -1;
     } else {
@@ -260,4 +253,6 @@ int CommunicationSIM800L::getSignalStrengthPercentage() {
   return -1;
 }
 
-void CommunicationSIM800L::powerOffModemImpl() { modem.poweroff(); }
+void CommunicationSIM800L::powerOffModemImpl() {
+  modem.poweroff();
+}

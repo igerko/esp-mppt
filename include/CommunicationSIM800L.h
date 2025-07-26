@@ -9,29 +9,30 @@
 #include <TinyGsmClient.h>
 
 class CommunicationSIM800L final : public ICommunicationService {
-public:
+ public:
   explicit CommunicationSIM800L()
-      : modem(Serial1), tinyGsmClient(modem),
+      : modem(Serial1),
+        tinyGsmClient(modem),
         httpClientTelegraf(tinyGsmClient, HTTP_SERVER, HTTP_TELEGRAF_PORT),
         httpClientFastApi(tinyGsmClient, HTTP_SERVER, HTTP_API_PORT) {}
 
-  CommunicationSIM800L(const CommunicationSIM800L &) = delete;
-  CommunicationSIM800L &operator=(const CommunicationSIM800L &) = delete;
-  int getSignalStrengthPercentage() override;
-  void powerOffModemImpl() override;
+  CommunicationSIM800L(const CommunicationSIM800L&)             = delete;
+  CommunicationSIM800L&  operator=(const CommunicationSIM800L&) = delete;
+  int                    getSignalStrengthPercentage() override;
+  void                   powerOffModemImpl() override;
   std::optional<timeval> getTimeFromModem() override;
 
   void sendMPPTPayload() override;
   void downloadConfig() override;
 
-protected:
+ protected:
   void setupModemImpl() override;
   bool ensureNetwork();
 
-private:
-  static bool setupPMU();
-  TinyGsm modem;
+ private:
+  static bool   setupPMU();
+  TinyGsm       modem;
   TinyGsmClient tinyGsmClient;
-  HttpClient httpClientTelegraf;
-  HttpClient httpClientFastApi;
+  HttpClient    httpClientTelegraf;
+  HttpClient    httpClientFastApi;
 };

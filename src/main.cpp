@@ -10,17 +10,17 @@
 #include "SolarMPPTMonitor.h"
 #include "TimeService.h"
 
-SleepManager sleepManager;
-HardwareSerial RS485Serial(2); // use UART2
-ModbusMaster node;             // single Modbus master
+SleepManager   sleepManager;
+HardwareSerial RS485Serial(2);  // use UART2
+ModbusMaster   node;            // single Modbus master
 
-CommunicationSIM800L sim800Instance;
-ICommunicationService *communicationService = &sim800Instance;
-TimeService timeService;
-LoadController loadController;
+CommunicationSIM800L   sim800Instance;
+ICommunicationService* communicationService = &sim800Instance;
+TimeService            timeService;
+LoadController         loadController;
 
 void setup() {
-  esp_task_wdt_init(300, true); // 5 minutes
+  esp_task_wdt_init(300, true);  // 5 minutes
   esp_task_wdt_add(nullptr);
   setenv("TZ", "CET-1CEST,M3.5.0/2,M10.5.0/3", 1);
   tzset();
@@ -40,15 +40,14 @@ void setup() {
 void loop() {
   esp_task_wdt_reset();
 
-  loadController.setLoadBasedOnConfig();
   LoggingService::logMPPTEntryToFile(SolarMPPTMonitor::readLogsFromMPPT());
 
   if (communicationService->isModemOn()) {
     communicationService->downloadConfig();
     communicationService->sendMPPTPayload();
-    loadController.setLoadBasedOnConfig();
     TimeService::updateLastModemPreference();
   }
+  loadController.setLoadBasedOnConfig();
   esp_task_wdt_reset();
   sleepManager.activateDeepSleep();
 }

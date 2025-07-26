@@ -9,17 +9,17 @@
 #include <cstdint>
 
 class SleepManager {
-public:
+ public:
   SleepManager();
-  void activateDeepSleep();
-  void afterWakeUpSetup();
+  void     activateDeepSleep();
+  void     afterWakeUpSetup();
   uint64_t getTotalWakeTime() const;
 
-private:
-  uint64_t totalAwakeTime = 0;  // total across all sessions (seconds)
-  uint32_t wakeStartMillis = 0; // millis at wake start
+ private:
+  uint64_t totalAwakeTime  = 0;  // total across all sessions (seconds)
+  uint32_t wakeStartMillis = 0;  // millis at wake start
 };
 
 inline RTC_DATA_ATTR bool wakenFromDeepSleep = false;
 
-#endif // SLEEPMANAGER_H
+#endif  // SLEEPMANAGER_H

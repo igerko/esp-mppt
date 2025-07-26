@@ -7,18 +7,17 @@ LoadController::LoadController() = default;
 
 void LoadController::setup() {
   Preferences prefs;
-  prefs.begin(PREF_NAME, true); // open namespace in read-only mode
-  nextLoadOn_ = prefs.getULong64("nextOn", 0);
+  prefs.begin(PREF_NAME, true);  // open namespace in read-only mode
+  nextLoadOn_  = prefs.getULong64("nextOn", 0);
   nextLoadOff_ = prefs.getULong64("nextOff", 0);
   prefs.end();
 
-  DBG_PRINTF("[LoadController] Loaded nextLoadOn=%ld, nextLoadOff=%ld\n",
-             (long)nextLoadOn_, (long)nextLoadOff_);
+  DBG_PRINTF("[LoadController] Loaded nextLoadOn=%ld, nextLoadOff=%ld\n", (long) nextLoadOn_, (long) nextLoadOff_);
 }
 
-void LoadController::updateConfig(const String &payload) {
+void LoadController::updateConfig(const String& payload) {
   JsonDocument doc;
-  Preferences prefs;
+  Preferences  prefs;
 
   DeserializationError error = deserializeJson(doc, payload);
   if (error) {
@@ -27,28 +26,27 @@ void LoadController::updateConfig(const String &payload) {
     return;
   }
 
-  const char *nextLoadOnStr = doc["nextLoadOn"];
-  const char *nextLoadOffStr = doc["nextLoadOff"];
+  const char* nextLoadOnStr  = doc["nextLoadOn"];
+  const char* nextLoadOffStr = doc["nextLoadOff"];
 
   DBG_PRINTF("[LoadController] Raw nextLoadOn: %s\n", nextLoadOnStr);
   DBG_PRINTF("[LoadController] Raw nextLoadOff: %s\n", nextLoadOffStr);
 
-  time_t nextLoadOn = TimeService::parseISO8601(nextLoadOnStr);
+  time_t nextLoadOn  = TimeService::parseISO8601(nextLoadOnStr);
   time_t nextLoadOff = TimeService::parseISO8601(nextLoadOffStr);
 
-  DBG_PRINTF("[LoadController] Parsed nextLoadOn: %ld\n", (long)nextLoadOn);
-  DBG_PRINTF("[LoadController] Parsed nextLoadOff: %ld\n", (long)nextLoadOff);
+  DBG_PRINTF("[LoadController] Parsed nextLoadOn: %ld\n", (long) nextLoadOn);
+  DBG_PRINTF("[LoadController] Parsed nextLoadOff: %ld\n", (long) nextLoadOff);
 
-  nextLoadOn_ = nextLoadOn;
+  nextLoadOn_  = nextLoadOn;
   nextLoadOff_ = nextLoadOff;
 
   prefs.begin(PREF_NAME, false);
-  prefs.putULong64("nextOn", (uint64_t)nextLoadOn_);
-  prefs.putULong64("nextOff", (uint64_t)nextLoadOff_);
+  prefs.putULong64("nextOn", (uint64_t) nextLoadOn_);
+  prefs.putULong64("nextOff", (uint64_t) nextLoadOff_);
   prefs.end();
 
-  DBG_PRINTF("[LoadController] Saved nextLoadOn=%ld, nextLoadOff=%ld\n",
-             (long)nextLoadOn_, (long)nextLoadOff_);
+  DBG_PRINTF("[LoadController] Saved nextLoadOn=%ld, nextLoadOff=%ld\n", (long) nextLoadOn_, (long) nextLoadOff_);
 }
 
 bool isInWindow(time_t current, time_t on, time_t off) {
@@ -69,38 +67,34 @@ void LoadController::setLoadBasedOnConfig() const {
   if (currentTime == 0)
     return;
 
-  int loadStatus;
+  int   loadStatus;
   float batteryPercent, batteryTemp;
 
-  bool readLoadStatus = SolarMPPTMonitor::readLoadState(loadStatus);
-  bool readBatteryStatus =
-      SolarMPPTMonitor::readBatteryStatus(batteryPercent, batteryTemp);
+  bool readLoadStatus    = SolarMPPTMonitor::readLoadState(loadStatus);
+  bool readBatteryStatus = SolarMPPTMonitor::readBatteryStatus(batteryPercent, batteryTemp);
 
   DBG_PRINTF("[LoadController] setLoadBasedOnConfig() called\n");
-  DBG_PRINTF("  currentTime = %lu\n", (unsigned long)currentTime);
-  DBG_PRINTF("  nextLoadOn_ = %lu\n", (unsigned long)nextLoadOn_);
-  DBG_PRINTF("  nextLoadOff_ = %lu\n", (unsigned long)nextLoadOff_);
+  DBG_PRINTF("  currentTime = %lu\n", (unsigned long) currentTime);
+  DBG_PRINTF("  nextLoadOn_ = %lu\n", (unsigned long) nextLoadOn_);
+  DBG_PRINTF("  nextLoadOff_ = %lu\n", (unsigned long) nextLoadOff_);
   DBG_PRINTF("  batteryPercent = %.1f %%\n", batteryPercent);
   DBG_PRINTF("  batteryTemp = %.2f °C\n", batteryTemp);
-  DBG_PRINTF("  readStatus = %s, loadStatus = %d\n",
-             readLoadStatus ? "true" : "false", loadStatus);
+  DBG_PRINTF("  readStatus = %s, loadStatus = %d\n", readLoadStatus ? "true" : "false", loadStatus);
 
   auto setLoadIfChanged = [&](bool desiredState) {
     if (loadStatus < 0) {
-      DBG_PRINTF("  -> loadStatus unknown (%d), forcing state %s\n", loadStatus,
-                 desiredState ? "ON" : "OFF");
+      DBG_PRINTF("  -> loadStatus unknown (%d), forcing state %s\n", loadStatus, desiredState ? "ON" : "OFF");
       SolarMPPTMonitor::setLoad(desiredState);
       return;
     }
 
     bool currentState = (loadStatus != 0);
     if (currentState != desiredState) {
-      DBG_PRINTF("  -> Changing load state to %s (current=%s)\n",
-                 desiredState ? "ON" : "OFF", currentState ? "ON" : "OFF");
+      DBG_PRINTF("  -> Changing load state to %s (current=%s)\n", desiredState ? "ON" : "OFF",
+                 currentState ? "ON" : "OFF");
       SolarMPPTMonitor::setLoad(desiredState);
     } else {
-      DBG_PRINTF("  -> Desired state = current state (%s), no change\n",
-                 desiredState ? "ON" : "OFF");
+      DBG_PRINTF("  -> Desired state = current state (%s), no change\n", desiredState ? "ON" : "OFF");
     }
   };
 
@@ -110,28 +104,25 @@ void LoadController::setLoadBasedOnConfig() const {
 
     if (batteryTemp < 0.0f) {
       cutoffHigh = 60.0f;
-      cutoffLow = 47.0f;
+      cutoffLow  = 47.0f;
     } else {
       cutoffHigh = 50.0f;
-      cutoffLow = 37.0f;
+      cutoffLow  = 37.0f;
     }
 
     bool loadWasOn = (loadStatus != 0);
-    DBG_PRINTF(
-        "  cutoffHigh = %.1f %% , cutoffLow = %.1f %% , loadWasOn = %s\n",
-        cutoffHigh, cutoffLow, loadWasOn ? "true" : "false");
+    DBG_PRINTF("  cutoffHigh = %.1f %% , cutoffLow = %.1f %% , loadWasOn = %s\n", cutoffHigh, cutoffLow,
+               loadWasOn ? "true" : "false");
 
     if (loadWasOn) {
       if (batteryPercent < cutoffLow) {
-        DBG_PRINTF("  -> Battery SOC %.1f%% < cutoffLow %.1f%%, turning OFF\n",
-                   batteryPercent, cutoffLow);
+        DBG_PRINTF("  -> Battery SOC %.1f%% < cutoffLow %.1f%%, turning OFF\n", batteryPercent, cutoffLow);
         setLoadIfChanged(false);
         return;
       }
     } else {
       if (batteryPercent < cutoffHigh) {
-        DBG_PRINTF("  -> Battery SOC %.1f%% < cutoffHigh %.1f%%, keep OFF\n",
-                   batteryPercent, cutoffHigh);
+        DBG_PRINTF("  -> Battery SOC %.1f%% < cutoffHigh %.1f%%, keep OFF\n", batteryPercent, cutoffHigh);
         setLoadIfChanged(false);
         return;
       }

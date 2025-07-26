@@ -1,7 +1,7 @@
 // globals.h
 #pragma once
 
-#define DEBUG_MODE 1 // set to 1 for debugging
+#define DEBUG_MODE 1  // set to 1 for debugging
 
 #if DEBUG_MODE
 #define DBG_PRINT(x) Serial.print(x)
@@ -19,9 +19,9 @@
 #include <ModbusMaster.h>
 
 extern HardwareSerial RS485Serial;
-extern ModbusMaster node;
+extern ModbusMaster   node;
 class ICommunicationService;
-extern ICommunicationService *communicationService;
+extern ICommunicationService* communicationService;
 class TimeService;
 extern TimeService timeService;
 class SleepManager;
@@ -31,10 +31,9 @@ extern LoadController loadController;
 
 #define SerialAT Serial1
 
-#define uS_TO_S_FACTOR                                                         \
-  1000000ULL /* Conversion factor for micro seconds to seconds */
-#define DEEP_SLEEP_DURATION 120 /* Time ESP32 will go to sleep (in seconds) */
-#define SEND_INTERVAL_SEC 900   /* 15 mins */
+#define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
+#define DEEP_SLEEP_DURATION 120   /* Time ESP32 will go to sleep (in seconds) */
+#define SEND_INTERVAL_SEC 900     /* 15 mins */
 
 #define DEBUG true
 

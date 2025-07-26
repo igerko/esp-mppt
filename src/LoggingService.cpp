@@ -4,23 +4,22 @@
 #include "SleepManager.h"
 
 LogEntry::LogEntry(const time_t ts, const int loadState) {
-  this->ts = ts;
+  this->ts        = ts;
   this->loadState = loadState;
 }
 
 String LogEntry::toJson() const {
   {
     JsonDocument doc;
-    doc[AdditionalJSONKeys::TIMESTAMP] = ts;
-    doc[AdditionalJSONKeys::DEVICE_ID] = MY_ESP_DEVICE_ID;
-    doc[AdditionalJSONKeys::SIGNAL_STRENGTH] =
-        communicationService->getSignalStrengthPercentage();
+    doc[AdditionalJSONKeys::TIMESTAMP]       = ts;
+    doc[AdditionalJSONKeys::DEVICE_ID]       = MY_ESP_DEVICE_ID;
+    doc[AdditionalJSONKeys::SIGNAL_STRENGTH] = communicationService->getSignalStrengthPercentage();
     doc[AdditionalJSONKeys::TOTAL_WAKE_TIME] = sleepManager.getTotalWakeTime();
-    doc[AdditionalJSONKeys::LOAD_STATUS] = loadState;
+    doc[AdditionalJSONKeys::LOAD_STATUS]     = loadState;
 
     const JsonObject vals = doc[AdditionalJSONKeys::REGISTERS].to<JsonObject>();
-    for (const auto &[fst, snd] : values) {
-      char keyHex[7]; // enough for "0xFFFF"
+    for (const auto& [fst, snd] : values) {
+      char keyHex[7];  // enough for "0xFFFF"
       sprintf(keyHex, "0x%04X", fst);
       vals[keyHex] = snd;
     }
@@ -44,7 +43,7 @@ void LoggingService::setup() {
   DBG_PRINTLN("[LoggingService] LittleFS mounted.");
 }
 
-size_t LoggingService::logMPPTEntryToFile(const LogEntry &log) {
+size_t LoggingService::logMPPTEntryToFile(const LogEntry& log) {
   File f = LittleFS.open(MPPT_LOG_FILE_NAME, FILE_APPEND);
   if (!f) {
     DBG_PRINTLN("[LoggingService] Failed to open log file for appending");

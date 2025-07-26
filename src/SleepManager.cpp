@@ -9,9 +9,10 @@
 #include "ICommunicationService.h"
 
 constexpr auto KEY_TOTAL_AWAKE_TIME = "awake_time";
-Preferences sleepPrefs;
+Preferences    sleepPrefs;
 
-SleepManager::SleepManager() : wakeStartMillis(millis()) {}
+SleepManager::SleepManager() : wakeStartMillis(millis()) {
+}
 
 void SleepManager::activateDeepSleep() {
   DBG_PRINT("[SleepManager] Power off modem ...");
@@ -26,17 +27,18 @@ void SleepManager::activateDeepSleep() {
   totalAwakeTime += sessionAwake;
 
   // save updated total awake time to NVS
-  sleepPrefs.begin(PREF_NAME, false); // read/write
+  sleepPrefs.begin(PREF_NAME, false);  // read/write
   sleepPrefs.putULong64(KEY_TOTAL_AWAKE_TIME, totalAwakeTime);
   sleepPrefs.end();
 
-  DBG_PRINTF("[SleepManager] Saving total awake time: %llu seconds (this "
-             "session: %lu)\n",
-             totalAwakeTime, sessionAwake);
+  DBG_PRINTF(
+      "[SleepManager] Saving total awake time: %llu seconds (this "
+      "session: %lu)\n",
+      totalAwakeTime, sessionAwake);
 
   // set time in slow memory
   const time_t now = time(nullptr);
-  tm t;
+  tm           t;
   localtime_r(&now, &t);
   storedEpoch = now;
   // put ESP to deep sleep
@@ -52,7 +54,7 @@ void SleepManager::activateDeepSleep() {
 void SleepManager::afterWakeUpSetup() {
   wakeStartMillis = millis();
   // Load previous total awake time from NVS
-  sleepPrefs.begin(PREF_NAME, true); // read-only
+  sleepPrefs.begin(PREF_NAME, true);  // read-only
   totalAwakeTime = sleepPrefs.getULong64(KEY_TOTAL_AWAKE_TIME, 0);
   sleepPrefs.end();
 
@@ -63,4 +65,6 @@ void SleepManager::afterWakeUpSetup() {
   DBG_PRINTLN("[SleepManager] afterWakeUpSetup done.");
 }
 
-uint64_t SleepManager::getTotalWakeTime() const { return totalAwakeTime; }
+uint64_t SleepManager::getTotalWakeTime() const {
+  return totalAwakeTime;
+}
