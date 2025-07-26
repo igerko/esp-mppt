@@ -1,18 +1,18 @@
 // globals.h
 #pragma once
 
-#define DEBUG_MODE 1  // set to 1 for debugging
+#define DEBUG_MODE 1 // set to 1 for debugging
 
 #if DEBUG_MODE
-  #define DBG_PRINT(x) Serial.print(x)
-  #define DBG_PRINT2(x, y) Serial.print(x, y)
-  #define DBG_PRINTF(...) Serial.printf(__VA_ARGS__)
-  #define DBG_PRINTLN(x) Serial.println(x)
+#define DBG_PRINT(x) Serial.print(x)
+#define DBG_PRINT2(x, y) Serial.print(x, y)
+#define DBG_PRINTF(...) Serial.printf(__VA_ARGS__)
+#define DBG_PRINTLN(x) Serial.println(x)
 #else
-  #define DBG_PRINT(x)
-  #define DBG_PRINT2(x, y)
-  #define DBG_PRINTF(...)
-  #define DBG_PRINTLN(x)
+#define DBG_PRINT(x)
+#define DBG_PRINT2(x, y)
+#define DBG_PRINTF(...)
+#define DBG_PRINTLN(x)
 #endif
 
 #include <HardwareSerial.h>
@@ -21,7 +21,7 @@
 extern HardwareSerial RS485Serial;
 extern ModbusMaster node;
 class ICommunicationService;
-extern ICommunicationService* communicationService;
+extern ICommunicationService *communicationService;
 class TimeService;
 extern TimeService timeService;
 class SleepManager;
@@ -31,8 +31,10 @@ extern LoadController loadController;
 
 #define SerialAT Serial1
 
-#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
-#define DEEP_SLEEP_DURATION  120   /* Time ESP32 will go to sleep (in seconds) */
+#define uS_TO_S_FACTOR                                                         \
+  1000000ULL /* Conversion factor for micro seconds to seconds */
+#define DEEP_SLEEP_DURATION 120 /* Time ESP32 will go to sleep (in seconds) */
+#define SEND_INTERVAL_SEC 900   /* 15 mins */
 
 #define DEBUG true
 
@@ -48,7 +50,7 @@ extern LoadController loadController;
 #define GSM_PIN "0000"
 
 // HTTP TODO: make it HTTPS
-#define HTTP_SERVER "vps.igerko.com" // TODO Implement
+#define HTTP_SERVER "vps.igerko.com"
 #define HTTP_TELEGRAF_PORT 8081
 #define HTTP_RESOURCE_MPPT "/crss"
 
@@ -62,23 +64,23 @@ extern LoadController loadController;
 #define RS485_BAUD 115200
 
 // Modem config - SIM800L
-#define MODEM_RST             5
-#define MODEM_PWRKEY          4
-#define MODEM_POWER_ON       23
-#define MODEM_TX             27
-#define MODEM_RX             26
+#define MODEM_RST 5
+#define MODEM_PWRKEY 4
+#define MODEM_POWER_ON 23
+#define MODEM_TX 27
+#define MODEM_RX 26
 
-#define MODEM_DTR            32
-#define MODEM_RI             33
+#define MODEM_DTR 32
+#define MODEM_RI 33
 
-#define I2C_SDA              21
-#define I2C_SCL              22
-#define LED_GPIO             13
-#define LED_ON               HIGH
-#define LED_OFF              LOW
+#define I2C_SDA 21
+#define I2C_SCL 22
+#define LED_GPIO 13
+#define LED_ON HIGH
+#define LED_OFF LOW
 
-#define IP5306_ADDR          0x75
-#define IP5306_REG_SYS_CTL0  0x00
+#define IP5306_ADDR 0x75
+#define IP5306_REG_SYS_CTL0 0x00
 
 #define SIM800L_IP5306_VERSION_20200811
 #define TINY_GSM_MODEM_SIM800

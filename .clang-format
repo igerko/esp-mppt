@@ -1,0 +1,34 @@
+BasedOnStyle: Google
+IndentWidth: 2            # Use 2 spaces per indent (common in embedded projects)
+TabWidth: 2
+UseTab: Never             # Always use spaces, never tabs
+ColumnLimit: 100          # Wrap lines after 100 characters
+
+# Braces style and single-line statements
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortBlocksOnASingleLine: false
+BreakBeforeBraces: Allman # Each brace on a new line (Allman style)
+
+# Pointer alignment and spacing
+DerivePointerAlignment: false
+PointerAlignment: Left    # Align pointer with the type: int* ptr
+SpaceBeforeParens: ControlStatements  # Space before parentheses in if, for, while, etc.
+
+# Include ordering and grouping
+SortIncludes: true        # Sort include directives alphabetically
+IncludeBlocks: Regroup    # Group and reorder includes into logical blocks
+
+# Alignment of operators, declarations, and comments
+AlignOperands: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignTrailingComments: true
+SpaceAfterCStyleCast: true # Add a space after a C-style cast: (int) value
+
+# Keep code blocks clean
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# Apply to C++/C files
+Language: Cpp

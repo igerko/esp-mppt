@@ -2,28 +2,23 @@
 
 #include "LoggingService.h"
 
-enum RegType
-{
-    REG_U16,
-    REG_U32
+enum RegType { REG_U16, REG_U32 };
+
+struct RegisterInfo {
+  uint16_t address;
+  const char *name;
+  float scale;
+  RegType type;
 };
 
-struct RegisterInfo
-{
-    uint16_t address;
-    const char* name;
-    float scale;
-    RegType type;
-};
-
-struct HoldingRegisterInfo
-{
-    uint16_t address;
-    const char* name;
+struct HoldingRegisterInfo {
+  uint16_t address;
+  const char *name;
 };
 
 inline RegisterInfo regBatterySoc = {0x311A, "Battery SOC (%)", 1.0f, REG_U16};
-inline RegisterInfo regBatteryTemp = {0x3110, "Battery Temp (°C)", 0.01f, REG_U16};
+inline RegisterInfo regBatteryTemp = {0x3110, "Battery Temp (°C)", 0.01f,
+                                      REG_U16};
 
 constexpr RegisterInfo mpptReadRegisters[] = {
     // 🔋 Battery status
@@ -73,18 +68,18 @@ constexpr RegisterInfo mpptReadRegisters[] = {
 };
 
 struct DateTimeFields {
-    uint8_t second;
-    uint8_t minute;
-    uint8_t hour;
-    uint8_t day;
-    uint8_t month;
-    uint8_t year; // maybe offset, depends on device spec
+  uint8_t second;
+  uint8_t minute;
+  uint8_t hour;
+  uint8_t day;
+  uint8_t month;
+  uint8_t year; // maybe offset, depends on device spec
 };
 
-constexpr uint16_t HR_RTC_SecondMinute = 0x9013;  // D7–0: Second, D15–8: Minute
-constexpr uint16_t HR_RTC_HourDay      = 0x9014;  // D7–0: Hour,  D15–8: Day
-constexpr uint16_t HR_RTC_MonthYear    = 0x9015;  // D7–0: Month, D15–8: Year
-constexpr uint16_t HR_LoadControlMode  = 0x903D;
+constexpr uint16_t HR_RTC_SecondMinute = 0x9013; // D7–0: Second, D15–8: Minute
+constexpr uint16_t HR_RTC_HourDay = 0x9014;      // D7–0: Hour,  D15–8: Day
+constexpr uint16_t HR_RTC_MonthYear = 0x9015;    // D7–0: Month, D15–8: Year
+constexpr uint16_t HR_LoadControlMode = 0x903D;
 constexpr HoldingRegisterInfo mpptHoldingRegisters[] = {
     {HR_LoadControlMode, "Load Control Mode"},
     /*
@@ -96,24 +91,24 @@ constexpr HoldingRegisterInfo mpptHoldingRegisters[] = {
     */
 };
 
-constexpr int mpptRegistersCount = std::size(mpptReadRegisters) + std::size(mpptHoldingRegisters);
+constexpr int mpptRegistersCount =
+    std::size(mpptReadRegisters) + std::size(mpptHoldingRegisters);
 
-class SolarMPPTMonitor
-{
+class SolarMPPTMonitor {
 public:
-    SolarMPPTMonitor();
-    static void setupRS465();
+  SolarMPPTMonitor();
+  static void setupRS465();
 
-    static LogEntry readLogsFromMPPT();
-    static bool setDatetimeInMPPT();
-    static bool readLoadState(int& loadState);
-    static bool setLoad(bool enable);
-    static bool readBatteryStatus(float& socPercent, float& tempC);
+  static LogEntry readLogsFromMPPT();
+  static bool setDatetimeInMPPT();
+  static bool readLoadState(int &loadState);
+  static bool setLoad(bool enable);
+  static bool readBatteryStatus(float &socPercent, float &tempC);
 
 private:
-    static bool readRegister(const RegisterInfo& reg, float& outValue);
-    static bool readHoldingRegister(uint16_t address, uint16_t& outValue);
-    static bool writeHoldingRegister(uint16_t address, uint16_t value);
+  static bool readRegister(const RegisterInfo &reg, float &outValue);
+  static bool readHoldingRegister(uint16_t address, uint16_t &outValue);
+  static bool writeHoldingRegister(uint16_t address, uint16_t value);
 
-    static bool readDatetimeInMPPT(DateTimeFields &dt);
+  static bool readDatetimeInMPPT(DateTimeFields &dt);
 };
