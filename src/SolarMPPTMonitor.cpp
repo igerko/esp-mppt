@@ -273,3 +273,32 @@ bool SolarMPPTMonitor::readDatetimeInMPPT(DateTimeFields& dt)
 
     return true;
 }
+
+bool SolarMPPTMonitor::readBatteryStatus(float& socPercent, float& tempC)
+{
+    bool allOk = true;
+
+    // Battery SOC (0x311A), scale 1.0f
+    {
+        RegisterInfo regSoc = {0x311A, "Battery SOC (%)", 1.0f, REG_U16};
+        float rawSoc = 0.0f;
+        if (readRegister(regSoc, rawSoc)) {
+            socPercent = rawSoc; // already scaled
+        } else {
+            allOk = false;
+        }
+    }
+
+    // Battery Temperature (0x3110), scale 0.01f
+    {
+        RegisterInfo regTemp = {0x3110, "Remote Battery Temp (°C)", 0.01f, REG_U16};
+        float rawTemp = 0.0f;
+        if (readRegister(regTemp, rawTemp)) {
+            tempC = rawTemp; // already scaled
+        } else {
+            allOk = false;
+        }
+    }
+
+    return allOk; // true only if both succeeded
+}

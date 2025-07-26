@@ -22,17 +22,31 @@ struct HoldingRegisterInfo
     const char* name;
 };
 
+inline RegisterInfo regBatterySoc = {0x311A, "Battery SOC (%)", 1.0f, REG_U16};
+inline RegisterInfo regBatteryTemp = {0x3110, "Battery Temp (°C)", 0.01f, REG_U16};
+
 constexpr RegisterInfo mpptReadRegisters[] = {
+    // 🔋 Battery status
     {0x3108, "Battery Voltage (V)", 0.01f, REG_U16},
     {0x3109, "Battery Output Current (A)", 0.01f, REG_U16},
     {0x310A, "Battery Output Power (W)", 0.01f, REG_U32},
+    {0x311A, "Battery SOC (%)", 1.0f, REG_U16},
+    {0x331B, "Battery Current (A)", 0.01f, REG_U32},
+
+    // ⚡ Load
     {0x310C, "Load Output Voltage (V)", 0.01f, REG_U16},
     {0x310D, "Load Output Current (A)", 0.01f, REG_U16},
     {0x310E, "Load Output Power (W)", 0.01f, REG_U32},
+
+    // ☀️ PV input
+    {0x3100, "PV Input Voltage (V)", 0.01f, REG_U16},
+    {0x3101, "PV Input Current (A)", 0.01f, REG_U16},
+    {0x3102, "PV Input Power (W)", 0.01f, REG_U32},
+
+    // 🌡️ Temps
     {0x3110, "Remote Battery Temperature (°C)", 0.01f, REG_U16},
     {0x3111, "Equipment Temperature (°C)", 0.01f, REG_U16},
     {0x3112, "MOSFET Temperature (°C)", 0.01f, REG_U16},
-    {0x311A, "Battery SOC (%)", 1.0f, REG_U16},
 
     // 📊 PV & Battery voltage min/max
     {0x3300, "Max PV Volt Today (V)", 0.01f, REG_U16},
@@ -40,20 +54,22 @@ constexpr RegisterInfo mpptReadRegisters[] = {
     {0x3302, "Max Battery Volt Today (V)", 0.01f, REG_U16},
     {0x3303, "Min Battery Volt Today (V)", 0.01f, REG_U16},
 
-    // ⚡ Consumed energy
+    // 📈 Consume stats
     {0x3304, "Consumed Energy Today (kWh)", 0.01f, REG_U32},
     {0x3306, "Consumed Energy This Month (kWh)", 0.01f, REG_U32},
     {0x3308, "Consumed Energy This Year (kWh)", 0.01f, REG_U32},
     {0x330A, "Total Consumed Energy (kWh)", 0.01f, REG_U32},
 
-    // ⚡ Generated energy
+    // 📈 Generate stats
     {0x330C, "Generated Energy Today (kWh)", 0.01f, REG_U32},
     {0x330E, "Generated Energy This Month (kWh)", 0.01f, REG_U32},
     {0x3310, "Generated Energy This Year (kWh)", 0.01f, REG_U32},
     {0x3312, "Total Generated Energy (kWh)", 0.01f, REG_U32},
 
-    // 🔋 Battery Current (signed!)
-    {0x331B, "Battery Current (A)", 0.01f, REG_U32}
+    // ⚠️ State registers (flag values)
+    {0x3200, "Battery Status (flags)", 1.0f, REG_U16},
+    {0x3201, "Equipment Charging Status (flags)", 1.0f, REG_U16},
+    {0x3202, "Equipment Discharging Status (flags)", 1.0f, REG_U16},
 };
 
 struct DateTimeFields {
@@ -93,6 +109,7 @@ public:
     static bool setDatetimeInMPPT();
     static bool readLoadState(int& loadState);
     static bool setLoad(bool enable);
+    static bool readBatteryStatus(float& socPercent, float& tempC);
 
 private:
     static bool readRegister(const RegisterInfo& reg, float& outValue);
