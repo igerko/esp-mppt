@@ -24,20 +24,37 @@ bool SolarMPPTMonitor::readRegister(const RegisterInfo& reg, float& outValue) {
   uint8_t count = (reg.type == REG_U32) ? 2 : 1;
 
   uint8_t result = node.readInputRegisters(reg.address, count);
-  if (result == node.ku8MBSuccess) {
-    if (reg.type == REG_U16) {
+  if (result != node.ku8MBSuccess) {
+    return false;
+  }
+
+  switch (reg.type) {
+    case REG_U16: {
       uint16_t raw = node.getResponseBuffer(0);
       outValue     = raw * reg.scale;
-    } else {
-      // REG_U32
+      break;
+    }
+    case REG_S16: {
+      int16_t raw = (int16_t) node.getResponseBuffer(0);
+      outValue    = raw * reg.scale;
+      break;
+    }
+    case REG_U32: {
       uint16_t low      = node.getResponseBuffer(0);
       uint16_t high     = node.getResponseBuffer(1);
       uint32_t combined = ((uint32_t) high << 16) | low;
       outValue          = combined * reg.scale;
+      break;
     }
-    return true;
+    case REG_S32: {
+      uint16_t low      = node.getResponseBuffer(0);
+      uint16_t high     = node.getResponseBuffer(1);
+      int32_t  combined = ((int32_t) high << 16) | low;
+      outValue          = combined * reg.scale;
+      break;
+    }
   }
-  return false;
+  return true;
 }
 
 bool SolarMPPTMonitor::readHoldingRegister(uint16_t address, uint16_t& outValue) {

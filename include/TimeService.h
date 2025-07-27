@@ -12,6 +12,7 @@ class TimeService {
   static void   debugTime();
   static time_t parseISO8601(const char* isoStr);
   static bool   isTimeToUseModem();
+  static ulong  getLastModemPreference();
   static void   updateLastModemPreference();
 
  private:

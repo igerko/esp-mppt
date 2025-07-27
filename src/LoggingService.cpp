@@ -16,6 +16,7 @@ String LogEntry::toJson() const {
     doc[AdditionalJSONKeys::SIGNAL_STRENGTH] = communicationService->getSignalStrengthPercentage();
     doc[AdditionalJSONKeys::TOTAL_WAKE_TIME] = sleepManager.getTotalWakeTime();
     doc[AdditionalJSONKeys::LOAD_STATUS]     = loadState;
+    doc[AdditionalJSONKeys::MODEM_SYNC_TIME] = TimeService::getLastModemPreference();
 
     const JsonObject vals = doc[AdditionalJSONKeys::REGISTERS].to<JsonObject>();
     for (const auto& [fst, snd] : values) {

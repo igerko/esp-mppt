@@ -137,6 +137,13 @@ bool TimeService::isTimeToUseModem() {
   DBG_PRINTLN(F("[TimeService] ⏳ Skip modem."));
   return false;
 }
+ulong TimeService::getLastModemPreference() {
+  Preferences prefs;
+  prefs.begin(PREF_NAME, true);
+  ulong lastModemUsedTime = prefs.getULong(KEY_LAST_MODEM_USED_TIME, -1);
+  prefs.end();
+  return lastModemUsedTime;
+}
 
 void TimeService::updateLastModemPreference() {
   time_t nowEpoch = getTimeUTC();

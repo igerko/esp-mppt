@@ -2,7 +2,7 @@
 
 #include "LoggingService.h"
 
-enum RegType { REG_U16, REG_U32 };
+enum RegType { REG_U16, REG_U32, REG_S16, REG_S32 };
 
 struct RegisterInfo {
   uint16_t    address;
@@ -25,7 +25,7 @@ constexpr RegisterInfo mpptReadRegisters[] = {
     {0x3109, "Battery Output Current (A)", 0.01f, REG_U16},
     {0x310A, "Battery Output Power (W)", 0.01f, REG_U32},
     {0x311A, "Battery SOC (%)", 1.0f, REG_U16},
-    {0x331B, "Battery Current (A)", 0.01f, REG_U32},
+    {0x331B, "Battery Current (A)", 0.01f, REG_S32},
 
     // ⚡ Load
     {0x310C, "Load Output Voltage (V)", 0.01f, REG_U16},
@@ -38,9 +38,9 @@ constexpr RegisterInfo mpptReadRegisters[] = {
     {0x3102, "PV Input Power (W)", 0.01f, REG_U32},
 
     // 🌡️ Temps
-    {0x3110, "Remote Battery Temperature (°C)", 0.01f, REG_U16},
-    {0x3111, "Equipment Temperature (°C)", 0.01f, REG_U16},
-    {0x3112, "MOSFET Temperature (°C)", 0.01f, REG_U16},
+    {0x3110, "Remote Battery Temperature (°C)", 0.01f, REG_S16},
+    {0x3111, "Equipment Temperature (°C)", 0.01f, REG_S16},
+    {0x3112, "MOSFET Temperature (°C)", 0.01f, REG_S16},
 
     // 📊 PV & Battery voltage min/max
     {0x3300, "Max PV Volt Today (V)", 0.01f, REG_U16},
