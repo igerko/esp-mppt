@@ -39,13 +39,16 @@ void setup() {
 
 void loop() {
   esp_task_wdt_reset();
-
+  if (communicationService->isModemOn()) {
+    // update modem used ts before log is generated
+    TimeService::updateLastModemPreference();
+  }
   LoggingService::logMPPTEntryToFile(SolarMPPTMonitor::readLogsFromMPPT());
 
   if (communicationService->isModemOn()) {
     communicationService->downloadConfig();
+
     communicationService->sendMPPTPayload();
-    TimeService::updateLastModemPreference();
   }
   loadController.setLoadBasedOnConfig();
   esp_task_wdt_reset();
