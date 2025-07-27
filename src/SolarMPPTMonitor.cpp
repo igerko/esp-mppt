@@ -11,13 +11,24 @@
 constexpr int MAX_RETRIES    = 3;   // how many times to retry
 constexpr int RETRY_DELAY_MS = 50;  // delay between retries (optional)
 
+void preTransmission() {
+  digitalWrite(RS485_DERE, HIGH);
+}
+
+void postTransmission() {
+  digitalWrite(RS485_DERE, LOW);
+}
+
 SolarMPPTMonitor::SolarMPPTMonitor() = default;
 
 void SolarMPPTMonitor::setupRS465() {
   pinMode(RS485_DERE, OUTPUT);
   digitalWrite(RS485_DERE, LOW);
   RS485Serial.begin(RS485_BAUD, SERIAL_8N1, RS485_RXD, RS485_TXD);
+  delay(50);
   node.begin(1, RS485Serial);
+  node.preTransmission(preTransmission);
+  node.postTransmission(postTransmission);
 }
 
 bool SolarMPPTMonitor::readRegister(const RegisterInfo& reg, float& outValue) {
