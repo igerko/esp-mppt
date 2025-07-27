@@ -149,5 +149,5 @@ void TimeService::updateLastModemPreference() {
   prefs.end();
 
   DBG_PRINTLN(F("[TimeService] ---- updateLastModemPreference ----"));
-  DBG_PRINTF("[TimeService] Stored new value KEY_LAST_MODEM_USED_TIME: %lu", nowEpoch);
+  DBG_PRINTF("[TimeService] Stored new value KEY_LAST_MODEM_USED_TIME: %lu\n", nowEpoch);
 }

@@ -33,7 +33,13 @@ extern LoadController loadController;
 
 #define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
 #define DEEP_SLEEP_DURATION 120   /* Time ESP32 will go to sleep (in seconds) */
-#define SEND_INTERVAL_SEC 900     /* 15 mins */
+
+// TODO move to Prefs and external config - use these as defaults
+#define SEND_INTERVAL_SEC (15 * 60) /* 15 mins */
+#define CUTOFF_HIGH_WINTER 60.0f
+#define CUTOFF_LOW_WINTER 50.0f
+#define CUTOFF_HIGH_SUMMER 50.0f
+#define CUTOFF_LOW_SUMMER 40.0f
 
 #define DEBUG true
 

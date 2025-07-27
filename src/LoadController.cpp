@@ -103,11 +103,11 @@ void LoadController::setLoadBasedOnConfig() const {
     float cutoffLow;
 
     if (batteryTemp < 0.0f) {
-      cutoffHigh = 60.0f;
-      cutoffLow  = 47.0f;
+      cutoffHigh = CUTOFF_HIGH_WINTER;
+      cutoffLow  = CUTOFF_LOW_WINTER;
     } else {
-      cutoffHigh = 50.0f;
-      cutoffLow  = 37.0f;
+      cutoffHigh = CUTOFF_HIGH_SUMMER;
+      cutoffLow  = CUTOFF_LOW_SUMMER;
     }
 
     bool loadWasOn = (loadStatus != 0);
