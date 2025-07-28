@@ -21,11 +21,19 @@ void postTransmission() {
 
 SolarMPPTMonitor::SolarMPPTMonitor() = default;
 
-void SolarMPPTMonitor::setupRS465() {
+void SolarMPPTMonitor::initOrResetRS485(bool existingCollection) {
+  if (existingCollection) {
+    RS485Serial.end();
+    delay(50);
+  }
+
   pinMode(RS485_DERE, OUTPUT);
-  digitalWrite(RS485_DERE, LOW);
-  RS485Serial.begin(RS485_BAUD, SERIAL_8N1, RS485_RXD, RS485_TXD);
+  digitalWrite(RS485_DERE, LOW);  // prepneme do režimu príjmu
   delay(50);
+
+  RS485Serial.begin(RS485_BAUD, SERIAL_8N1, RS485_RXD, RS485_TXD);
+  delay(100);  // nech sa UART inicializuje
+
   node.begin(1, RS485Serial);
   node.preTransmission(preTransmission);
   node.postTransmission(postTransmission);
@@ -36,6 +44,7 @@ bool SolarMPPTMonitor::readRegister(const RegisterInfo& reg, float& outValue) {
 
   uint8_t result = node.readInputRegisters(reg.address, count);
   if (result != node.ku8MBSuccess) {
+    initOrResetRS485(true);
     return false;
   }
 
@@ -74,6 +83,7 @@ bool SolarMPPTMonitor::readHoldingRegister(uint16_t address, uint16_t& outValue)
     outValue = node.getResponseBuffer(0);
     return true;
   }
+  initOrResetRS485(true);
   return false;
 }
 
@@ -91,6 +101,7 @@ bool SolarMPPTMonitor::writeHoldingRegister(uint16_t address, uint16_t value) {
   DBG_PRINT2(address, HEX);
   DBG_PRINT(": ");
   DBG_PRINTLN(result);
+  initOrResetRS485(true);
   return false;
 }
 
@@ -106,6 +117,7 @@ bool SolarMPPTMonitor::readLoadState(int& loadState) {
   } else {
     DBG_PRINT("[SolarMPPTMonitor] Error during read LOAD, code: ");
     DBG_PRINTLN(result);
+    initOrResetRS485(true);
     return false;
   }
 }
@@ -121,6 +133,7 @@ bool SolarMPPTMonitor::setLoad(bool enable) {
     DBG_PRINT(enable ? "turning on" : "turning off");
     DBG_PRINT(" LOAD, code: ");
     DBG_PRINTLN(result);
+    initOrResetRS485(true);
     return false;
   }
 }

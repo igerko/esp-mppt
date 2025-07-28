@@ -28,7 +28,7 @@ void setup() {
   sleepManager.afterWakeUpSetup();
   Serial.begin(115200);
   delay(100);
-  SolarMPPTMonitor::setupRS465();
+  SolarMPPTMonitor::initOrResetRS485(false);
   LoggingService::setup();
   loadController.setup();
 

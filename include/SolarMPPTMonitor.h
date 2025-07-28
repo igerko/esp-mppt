@@ -95,7 +95,7 @@ constexpr int mpptRegistersCount = std::size(mpptReadRegisters) + std::size(mppt
 class SolarMPPTMonitor {
  public:
   SolarMPPTMonitor();
-  static void setupRS465();
+  static void initOrResetRS485(bool existingCollection);
 
   static LogEntry readLogsFromMPPT();
   static bool     setDatetimeInMPPT();
