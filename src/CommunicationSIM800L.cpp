@@ -1,3 +1,4 @@
+#ifdef LILYGO_SIM800L
 #include "CommunicationSIM800L.h"
 
 #include <HardwareSerial.h>
@@ -256,3 +257,5 @@ int CommunicationSIM800L::getSignalStrengthPercentage() {
 void CommunicationSIM800L::powerOffModemImpl() {
   modem.poweroff();
 }
+
+#endif

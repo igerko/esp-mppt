@@ -7,7 +7,7 @@ class LoadController {
  public:
   LoadController();
   void setup();
-  void updateConfig(const String& payload);
+  void updateConfigAndTime(const String& payload);
   void setLoadBasedOnConfig() const;
 
   void setNextLoadOn(time_t t) { nextLoadOn_ = t; }

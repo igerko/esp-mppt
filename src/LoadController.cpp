@@ -15,7 +15,7 @@ void LoadController::setup() {
   DBG_PRINTF("[LoadController] Loaded nextLoadOn=%ld, nextLoadOff=%ld\n", (long) nextLoadOn_, (long) nextLoadOff_);
 }
 
-void LoadController::updateConfig(const String& payload) {
+void LoadController::updateConfigAndTime(const String& payload) {
   JsonDocument doc;
   Preferences  prefs;
 
@@ -28,18 +28,27 @@ void LoadController::updateConfig(const String& payload) {
 
   const char* nextLoadOnStr  = doc["nextLoadOn"];
   const char* nextLoadOffStr = doc["nextLoadOff"];
+  const char* currentTimeStr = doc["currentTime"];
 
   DBG_PRINTF("[LoadController] Raw nextLoadOn: %s\n", nextLoadOnStr);
   DBG_PRINTF("[LoadController] Raw nextLoadOff: %s\n", nextLoadOffStr);
+  DBG_PRINTF("[LoadController] Raw currentTime: %s\n", currentTimeStr);
 
   time_t nextLoadOn  = TimeService::parseISO8601(nextLoadOnStr);
   time_t nextLoadOff = TimeService::parseISO8601(nextLoadOffStr);
+  time_t currentTime = TimeService::parseISO8601(currentTimeStr);
 
   DBG_PRINTF("[LoadController] Parsed nextLoadOn: %ld\n", (long) nextLoadOn);
   DBG_PRINTF("[LoadController] Parsed nextLoadOff: %ld\n", (long) nextLoadOff);
+  DBG_PRINTF("[LoadController] Parsed currentTime: %ld\n", (long) currentTime);
 
   nextLoadOn_  = nextLoadOn;
   nextLoadOff_ = nextLoadOff;
+
+  timeval tv{};
+  tv.tv_sec = currentTime;
+  tv.tv_usec = 0;
+  TimeService::setESPTimeFromModem(tv);
 
   prefs.begin(PREF_NAME, false);
   prefs.putULong64("nextOn", (uint64_t) nextLoadOn_);

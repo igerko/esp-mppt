@@ -2,7 +2,6 @@
 #include <LittleFS.h>
 #include <esp_task_wdt.h>
 
-#include "CommunicationSIM800L.h"
 #include "Globals.h"
 #include "LoadController.h"
 #include "LoggingService.h"
@@ -14,10 +13,17 @@ SleepManager   sleepManager;
 HardwareSerial RS485Serial(2);  // use UART2
 ModbusMaster   node;            // single Modbus master
 
+#ifdef LILYGO_SIM800L
+#include "CommunicationSIM800L.h"
 CommunicationSIM800L   sim800Instance;
 ICommunicationService* communicationService = &sim800Instance;
-TimeService            timeService;
-LoadController         loadController;
+#elif TINY_GSM_MODEM_A7670
+#include "CommunicationA7670E.h"
+CommunicationA7670E    simA7670EInstance;
+ICommunicationService* communicationService = &simA7670EInstance;
+#endif
+TimeService    timeService;
+LoadController loadController;
 
 void setup() {
   esp_task_wdt_init(300, true);  // 5 minutes
@@ -28,12 +34,16 @@ void setup() {
   sleepManager.afterWakeUpSetup();
   Serial.begin(115200);
   delay(100);
-  SolarMPPTMonitor::initOrResetRS485(false);
+  DBG_PRINTF("!!!!!!! Current firmware version: %s !!!!!!!\n", MPPT_FIRMWARE_VERSION);
+  SolarMPPTMonitor::setupRS465();
   LoggingService::setup();
   loadController.setup();
 
-  if (TimeService::isTimeToUseModem() && !communicationService->isModemOn())
+  if (TimeService::isTimeToUseModem() && !communicationService->isModemOn()) {
     communicationService->setupModem();
+    communicationService->downloadConfig();
+    communicationService->performOtaUpdate();
+  }
   esp_task_wdt_reset();
 }
 
@@ -46,8 +56,6 @@ void loop() {
   LoggingService::logMPPTEntryToFile(SolarMPPTMonitor::readLogsFromMPPT());
 
   if (communicationService->isModemOn()) {
-    communicationService->downloadConfig();
-
     communicationService->sendMPPTPayload();
   }
   loadController.setLoadBasedOnConfig();

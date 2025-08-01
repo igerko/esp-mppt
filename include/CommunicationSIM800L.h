@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef LILYGO_SIM800L
 #include "ICommunicationService.h"
 
 #define SIM800L_IP5306_VERSION_20200811
@@ -36,3 +36,5 @@ class CommunicationSIM800L final : public ICommunicationService {
   HttpClient    httpClientTelegraf;
   HttpClient    httpClientFastApi;
 };
+
+#endif
