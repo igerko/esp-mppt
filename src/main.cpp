@@ -35,7 +35,7 @@ void setup() {
   Serial.begin(115200);
   delay(100);
   DBG_PRINTF("!!!!!!! Current firmware version: %s !!!!!!!\n", MPPT_FIRMWARE_VERSION);
-  SolarMPPTMonitor::setupRS465();
+  SolarMPPTMonitor::initOrResetRS485(false);
   LoggingService::setup();
   loadController.setup();
 
