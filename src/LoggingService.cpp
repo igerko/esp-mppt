@@ -11,12 +11,13 @@ LogEntry::LogEntry(const time_t ts, const int loadState) {
 String LogEntry::toJson() const {
   {
     JsonDocument doc;
-    doc[AdditionalJSONKeys::TIMESTAMP]       = ts;
-    doc[AdditionalJSONKeys::DEVICE_ID]       = MY_ESP_DEVICE_ID;
-    doc[AdditionalJSONKeys::SIGNAL_STRENGTH] = communicationService->getSignalStrengthPercentage();
-    doc[AdditionalJSONKeys::TOTAL_WAKE_TIME] = sleepManager.getTotalWakeTime();
-    doc[AdditionalJSONKeys::LOAD_STATUS]     = loadState;
-    doc[AdditionalJSONKeys::MODEM_SYNC_TIME] = TimeService::getLastModemPreference();
+    doc[AdditionalJSONKeys::TIMESTAMP]        = ts;
+    doc[AdditionalJSONKeys::DEVICE_ID]        = MY_ESP_DEVICE_ID;
+    doc[AdditionalJSONKeys::SIGNAL_STRENGTH]  = communicationService->getSignalStrengthPercentage();
+    doc[AdditionalJSONKeys::TOTAL_WAKE_TIME]  = sleepManager.getTotalWakeTime();
+    doc[AdditionalJSONKeys::LOAD_STATUS]      = loadState;
+    doc[AdditionalJSONKeys::MODEM_SYNC_TIME]  = TimeService::getLastModemPreference();
+    doc[AdditionalJSONKeys::FIRMWARE_VERSION] = MPPT_FIRMWARE_VERSION;
 
     const JsonObject vals = doc[AdditionalJSONKeys::REGISTERS].to<JsonObject>();
     for (const auto& [fst, snd] : values) {

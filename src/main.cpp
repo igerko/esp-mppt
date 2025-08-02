@@ -49,6 +49,7 @@ void setup() {
 
 void loop() {
   esp_task_wdt_reset();
+  loadController.setLoadBasedOnConfig();
   if (communicationService->isModemOn()) {
     // update modem used ts before log is generated
     TimeService::updateLastModemPreference();
