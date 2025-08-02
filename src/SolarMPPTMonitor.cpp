@@ -40,7 +40,7 @@ void SolarMPPTMonitor::initOrResetRS485(bool existingCollection) {
 }
 
 bool SolarMPPTMonitor::readRegister(const RegisterInfo& reg, float& outValue) {
-  uint8_t count = (reg.type == REG_U32) ? 2 : 1;
+  uint8_t count = (reg.type == REG_U32 || reg.type == REG_S32) ? 2 : 1;
 
   uint8_t result = node.readInputRegisters(reg.address, count);
   if (result != node.ku8MBSuccess) {
@@ -69,7 +69,8 @@ bool SolarMPPTMonitor::readRegister(const RegisterInfo& reg, float& outValue) {
     case REG_S32: {
       uint16_t low      = node.getResponseBuffer(0);
       uint16_t high     = node.getResponseBuffer(1);
-      int32_t  combined = ((int32_t) high << 16) | low;
+      uint32_t raw      = ((uint32_t) high << 16) | low;
+      int32_t  combined = *(int32_t*) &raw;
       outValue          = combined * reg.scale;
       break;
     }
