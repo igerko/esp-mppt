@@ -46,7 +46,7 @@ void LoadController::updateConfigAndTime(const String& payload) {
   nextLoadOff_ = nextLoadOff;
 
   timeval tv{};
-  tv.tv_sec = currentTime;
+  tv.tv_sec  = currentTime;
   tv.tv_usec = 0;
   TimeService::setESPTimeFromModem(tv);
 
@@ -59,7 +59,7 @@ void LoadController::updateConfigAndTime(const String& payload) {
 }
 
 bool isInWindow(time_t current, time_t on, time_t off) {
-  if (on == 0 || off == 0)
+  if (on == 0 || off == 0 || on == off)
     return false;
 
   if (on < off) {
