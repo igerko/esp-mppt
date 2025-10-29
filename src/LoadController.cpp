@@ -107,37 +107,6 @@ void LoadController::setLoadBasedOnConfig() const {
     }
   };
 
-  if (readBatteryStatus) {
-    float cutoffHigh;
-    float cutoffLow;
-
-    if (batteryTemp < 0.0f) {
-      cutoffHigh = CUTOFF_HIGH_WINTER;
-      cutoffLow  = CUTOFF_LOW_WINTER;
-    } else {
-      cutoffHigh = CUTOFF_HIGH_SUMMER;
-      cutoffLow  = CUTOFF_LOW_SUMMER;
-    }
-
-    bool loadWasOn = (loadStatus != 0);
-    DBG_PRINTF("  cutoffHigh = %.1f %% , cutoffLow = %.1f %% , loadWasOn = %s\n", cutoffHigh, cutoffLow,
-               loadWasOn ? "true" : "false");
-
-    if (loadWasOn) {
-      if (batteryPercent < cutoffLow) {
-        DBG_PRINTF("  -> Battery SOC %.1f%% < cutoffLow %.1f%%, turning OFF\n", batteryPercent, cutoffLow);
-        setLoadIfChanged(false);
-        return;
-      }
-    } else {
-      if (batteryPercent < cutoffHigh) {
-        DBG_PRINTF("  -> Battery SOC %.1f%% < cutoffHigh %.1f%%, keep OFF\n", batteryPercent, cutoffHigh);
-        setLoadIfChanged(false);
-        return;
-      }
-    }
-  }
-
   if (!readLoadStatus) {
     DBG_PRINTF("  -> Read status false\n");
     setLoadIfChanged(false);
